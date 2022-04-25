@@ -22,10 +22,10 @@ if __name__ == '__main__':
         'weeks_to_import': 1,
         'players_to_import_by_id': [],
         'players_to_import_by_name': [],
-        'games_to_import': [2018090600],
+        'games_to_import': [],
         'teams_to_import': [],
         'team_type_to_import': ['home', 'away', 'football'],
-        'plays_to_import': [75, 146],
+        'plays_to_import': [],
         'directions_to_select': ['left', 'right'],
         'routes_to_select': []
     }
@@ -52,13 +52,14 @@ if __name__ == '__main__':
     play_ids = plays_df['gpid'].unique().tolist()
 
     # Start multiprocessing pool
+    import psutil
+
+    ray._private.utils.get_system_memory = lambda: psutil.virtual_memory().total
     ray.init()
 
     # Process selected games
-    #tracking_df = pd.DataFrame()
-    #tracking_df = pd.concat(ray.get([dfa.analyse_play.remote(play, plays_df, games_df, players_df, source_folder) for play in play_ids]))
-
-    tracking_df = ray.get([dfa.analyse_play.remote(play, plays_df, games_df, players_df, source_folder) for play in play_ids])
+    futures = [dfa.analyse_play.remote(play, plays_df, games_df, players_df, source_folder) for play in play_ids]
+    tracking_df = ray.get(futures)
     print('Complete')
     # Combine analysis data
     # Select training/test sets
