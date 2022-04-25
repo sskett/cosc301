@@ -62,7 +62,10 @@ def flip_direction(row):
         return row.dir_vec
 
 
-def transform_tracking_data(df):
+def transform_tracking_data(df, o_team):
+    # Classify offense and defense
+    df['teamType'] = df['team'].apply(lambda x: 'ball' if x == 'football' else 'offense' if x == o_team else 'defense')
+
     # Convert angles to radians
     df['o'] = df['o'].apply(convert_to_radians)
     df['dir'] = df['dir'].apply(convert_to_radians)

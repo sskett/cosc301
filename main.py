@@ -1,7 +1,6 @@
-import importlib
-import numpy as np
 import pandas as pd
 import ray
+
 from d10_code import f10_import_data as dfi
 from d10_code import f20_filter_data as dff
 from d10_code import f30_clean_data as dfc
@@ -53,12 +52,22 @@ if __name__ == '__main__':
     play_ids = plays_df['gpid'].unique().tolist()
 
     # Start multiprocessing pool
+    ray.shutdown()
     ray.init()
 
     # Process selected games
     tracking_df = pd.DataFrame()
-    tracking_df = pd.concat(ray.get([dfa.analyse_game.remote(play, plays_df, games_df, players_df, source_folder) for play in play_ids]))
-    print(tracking_df.shape)
+    group_df = pd.DataFrame()
+    print(play_ids)
+    tracking_df = pd.concat(ray.get(
+        [dfa.analyse_play.remote(
+            play,
+            plays_df,
+            games_df,
+            players_df,
+            source_folder
+        ) for play in play_ids]))
+    print(tracking_df.head())
     # Combine analysis data
     # Select training/test sets
     # Do stuff...
