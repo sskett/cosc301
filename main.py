@@ -52,9 +52,6 @@ if __name__ == '__main__':
     play_ids = plays_df['gpid'].unique().tolist()
 
     # Start multiprocessing pool
-    import psutil
-
-    ray._private.utils.get_system_memory = lambda: psutil.virtual_memory().total
     ray.init()
 
     # Process selected games

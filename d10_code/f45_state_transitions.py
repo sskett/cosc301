@@ -29,8 +29,8 @@ def calc_play_p_group(play_data, group_data=pd.DataFrame()):
     # 1. Initialise results dataframe
     num_frames = play_data['frameId'].max()
     group_data['frameId'] = pd.Series(np.arange(1, num_frames + 1))
-    group_data['gameId'] = pd.Series(play_data['gameId'])
-    group_data['playId'] = pd.Series(play_data['playId'])
+    group_data.loc[:, 'gameId'] = play_data['gameId'].values[0]
+    group_data.loc[:, 'playId'] = play_data['playId'].values[0]
     group_data = group_data.reindex(columns=['gameId', 'playId', 'frameId'])
 
     # 2. Determine polarisation for home and away teams
