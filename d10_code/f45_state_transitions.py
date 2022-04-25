@@ -31,6 +31,11 @@ def calc_play_p_group(play_data, group_data=pd.DataFrame()):
     d_data, d_p_group = calc_team_p_group('defense')
 
     # 2. Return values
+    num_frames = max(len(o_p_group), len(d_p_group))
+    group_data['frameId'] = pd.Series(np.arange(1, num_frames + 1))
+    group_data['gameId'] = pd.Series(play_data['gameId'])
+    group_data['playId'] = pd.Series(play_data['playId'])
+    group_data = group_data.reindex(columns=['gameId', 'playId', 'frameId'])
     group_data['offense_p_group'] = pd.Series(o_p_group)
     group_data['defense_p_group'] = pd.Series(d_p_group)
     return play_data, group_data

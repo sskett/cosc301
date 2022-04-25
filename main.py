@@ -25,7 +25,7 @@ if __name__ == '__main__':
         'games_to_import': [2018090600],
         'teams_to_import': [],
         'team_type_to_import': ['home', 'away', 'football'],
-        'plays_to_import': [],
+        'plays_to_import': [75, 146],
         'directions_to_select': ['left', 'right'],
         'routes_to_select': []
     }
@@ -52,22 +52,14 @@ if __name__ == '__main__':
     play_ids = plays_df['gpid'].unique().tolist()
 
     # Start multiprocessing pool
-    ray.shutdown()
     ray.init()
 
     # Process selected games
-    tracking_df = pd.DataFrame()
-    group_df = pd.DataFrame()
-    print(play_ids)
-    tracking_df = pd.concat(ray.get(
-        [dfa.analyse_play.remote(
-            play,
-            plays_df,
-            games_df,
-            players_df,
-            source_folder
-        ) for play in play_ids]))
-    print(tracking_df.head())
+    #tracking_df = pd.DataFrame()
+    #tracking_df = pd.concat(ray.get([dfa.analyse_play.remote(play, plays_df, games_df, players_df, source_folder) for play in play_ids]))
+
+    tracking_df = ray.get([dfa.analyse_play.remote(play, plays_df, games_df, players_df, source_folder) for play in play_ids])
+    print('Complete')
     # Combine analysis data
     # Select training/test sets
     # Do stuff...
