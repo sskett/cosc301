@@ -4,13 +4,15 @@ import math
 
 
 def analyse_play_data(data):
-    # print('Calculating p_group data')
+    # Calculating p_group data (Polarisation)
     data, group_data = calc_play_p_group(data)
-    # print('Calculating m_group data')
+    # Calculating m_group data (Angular Momentum)
     data, group_data = calc_play_m_group(data, group_data)
-    # print('Calculating v_group data')
+    # Calculating v_group data (Group Speed)
     group_data = calc_play_v_group(data, group_data, 0.1)
-    # print('Calculating group data complete')
+    # Calculate h_group data (Shannon Entropy)
+    calc_play_h_group(data, group_data)
+    print('Calculating group data complete')
     return data, group_data
 
 
@@ -157,3 +159,86 @@ def calc_play_v_group(play_data, group_data, time_step):
 
     return group_data
 
+
+def calc_play_h_group(play_data, group_data):
+    # Max speed ~10yd/sec == ~1yd/frame
+    # TODO: Modify to use a limited number of frames instead of whole play
+    # a) Initialise grid
+    grid_size = 64
+    step = 0.5
+    grid = np.zeros(grid_size * grid_size).reshape((grid_size, grid_size))
+
+    # b) Calculate position vectors
+    team = play_data.loc[(play_data['teamType'] == 'offense')]
+    for idx, row in team.iterrows():
+        i = round((row.dir_vec[0] * row.s) / step) + int(grid_size / 2 - 1)
+        j = round((row.dir_vec[1] * row.s) / step) + int(grid_size / 2 - 1)
+        grid[i][j] = grid[i][j] + 1
+
+    # c) Estimate probabilities
+    p_grid = np.zeros(grid_size * grid_size).reshape((grid_size, grid_size))
+    sum_f = grid.sum()
+    for i in range(0, grid_size):
+        for j in range(0, grid_size):
+            p_grid[i][j] = grid[i][j] / sum_f
+
+    # d) Calculate Shannon-Entropy (h)
+    h_home = []
+    h_grid = np.zeros(grid_size * grid_size).reshape((grid_size, grid_size))
+    for i in range(0, grid_size):
+        for j in range(0, grid_size):
+            if p_grid[i][j] > 0:
+                h_grid[i][j] = p_grid[i][j] * math.log(p_grid[i][j], 2)
+    h_home.append(-1 * h_grid.sum())
+    print(h_home)
+
+    # e) Plot position probabilities
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import LinearSegmentedColormap
+    from scipy.spatial import ConvexHull, convex_hull_plot_2d
+    from matplotlib import cm
+    import scipy.ndimage.filters as filters
+
+    colors = [(0, 0, 1), (0, 1, 1), (0, 1, 0.75), (0, 1, 0), (0.75, 1, 0), (1, 1, 0), (1, 0.8, 0), (1, 0.7, 0), (1, 0, 0)]
+
+    cm = LinearSegmentedColormap.from_list('sample', colors)
+    plt.imshow(p_grid, cmap=cm)
+    plt.colorbar()
+    plt.show()
+
+    # 7. Calculate area of convex hulls
+    # hull_frame = game_data.loc[(game_data['event'] == 'ball_snapped')]['frameId'].tolist()[0]
+    hull_frame = 30
+    #los = plays.loc[(plays['playId'] == play)]['absoluteYardlineNumber'].tolist()[0]
+
+    # Home team convex hull
+    a_data = play_data.loc[(play_data['teamType'] == 'offense') & (play_data['frameId'] == hull_frame)]
+    a_points = np.zeros((len(a_data), 2))
+    a_points[:, 0] = np.array(a_data['pos'].tolist())[:, 0]
+    a_points[:, 1] = np.array(a_data['pos'].tolist())[:, 1]
+    a_hull = ConvexHull(a_points)
+
+
+    # Away team convex hull
+    a2_data = play_data.loc[(play_data['teamType'] == 'defense') & (play_data['frameId'] == hull_frame)]
+    a2_points = np.zeros((len(a2_data), 2))
+    a2_points[:, 0] = np.array(a2_data['pos'].tolist())[:, 0]
+    a2_points[:, 1] = np.array(a2_data['pos'].tolist())[:, 1]
+
+    a2_hull = ConvexHull(a2_points)
+
+    # Plot image of convex hulls for home and away
+    a = plt.figure()
+    axes = a.add_axes([0, 0, 1, 1])
+
+    axes.set_xlim([0, 120])
+    axes.set_ylim([0, 60])
+
+    axes.plot(a_points[:, 0], a_points[:, 1], 'o')
+    axes.plot(a2_points[:, 0], a2_points[:, 1], 'x')
+    # axes.axvline(x=los)
+    for simplex in a_hull.simplices:
+        axes.plot(a_points[simplex, 0], a_points[simplex, 1], 'r-')
+    for simplex in a2_hull.simplices:
+        axes.plot(a2_points[simplex, 0], a2_points[simplex, 1], 'g-')
+    a.show()
