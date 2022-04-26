@@ -4,7 +4,7 @@ from .f10_import_data import import_tracking_data
 from .f20_filter_data import filter_tracking_data
 from .f30_clean_data import clean_tracking_data
 from .f41_transform_data import transform_tracking_data
-from .f45_state_transitions import analyse_play_data
+from .f45_state_transitions import analyse_play_data_state_transition
 
 
 def define_pandas_options():
@@ -30,6 +30,6 @@ def analyse_play(play_id, plays_df, games_df, players_df, source_dir):
     tracking_df = filter_tracking_data(tracking_df, game_id, play_id)
     tracking_df = clean_tracking_data(tracking_df)
     tracking_df = transform_tracking_data(tracking_df, o_team_type)
-    tracking_df, group_df = analyse_play_data(tracking_df)
+    tracking_df, group_df = analyse_play_data_state_transition(tracking_df)
 
     return tracking_df, group_df

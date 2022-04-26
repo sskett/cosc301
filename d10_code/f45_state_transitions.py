@@ -3,11 +3,13 @@ import numpy as np
 import math
 
 
-def analyse_play_data(data):
+def analyse_play_data_state_transition(data):
     # Calculating p_group data (Polarisation)
     data, group_data = calc_play_p_group(data)
     # Calculating m_group data (Angular Momentum)
     data, group_data = calc_play_m_group(data, group_data)
+    # Determine transition state from p and m values
+    group_data = calc_transition_state(group_data)
     # Calculating v_group data (Group Speed)
     group_data = calc_play_v_group(data, group_data, 0.1)
     # Calculate h_group data (Shannon Entropy)
@@ -25,7 +27,8 @@ def calc_play_p_group(play_data, group_data=pd.DataFrame()):
         # print('Calculating polarisation of the home team')
         for frame in range(1, team_data['frameId'].max() + 1):
             n_players = team_data['nflId'].nunique()
-            p_group.append(np.abs(team_data.loc[(team_data['frameId'] == frame)]['dir_vec'].sum()) / n_players)
+            v_sum = team_data.loc[(team_data['frameId'] == frame)]['dir_vec'].sum()
+            p_group.append((np.sqrt(v_sum.dot(v_sum))) / n_players)
         return team_data, p_group
 
     # 1. Initialise results dataframe
@@ -74,39 +77,39 @@ def calc_play_m_group(play_data, group_data):
                 play_data_t.at[idx, 'ry'] = r[1]
 
         # Calculate m group
-        mx = np.zeros(num_frames)
-        my = np.zeros(num_frames)
+        mt = np.zeros(num_frames)
         for frame in range(1, num_frames + 1):
             m = (0, 0)
             num_players = play_data_t['nflId'].nunique()
             for idx, player in play_data_t.loc[(play_data_t['frameId'] == frame)].iterrows():
                 m = m[0] + player.rx * player.dir_vec[0], m[1] + player.ry * player.dir_vec[1]
-            m = m[0] / num_players, m[1] / num_players
-            mx[frame - 1] = m[0]
-            my[frame - 1] = m[1]
-        return play_data_t, mx, my
+            m = math.sqrt(m[0] ** 2 + m[1] ** 2) / num_players
+            mt[frame - 1] = m
+        return play_data_t, mt
 
     # Analyse home and away teams
-    play_data_o, off_mx, off_my = calc_team_m_group('offense')
-    play_data_d, def_mx, def_my = calc_team_m_group('defense')
+    play_data_o, o_m_group = calc_team_m_group('offense')
+    play_data_d, d_m_group = calc_team_m_group('defense')
 
     # Merge dataframes
     play_data = pd.concat([play_data_o, play_data_d], ignore_index=True, sort=False)
-    group_data['mx_off'] = pd.Series(off_mx)
-    group_data['my_off'] = pd.Series(off_my)
-    group_data['mx_def'] = pd.Series(def_mx)
-    group_data['my_def'] = pd.Series(def_my)
 
     # Convert to 2D vectors
     play_data['r_vec'] = play_data.apply(lambda x: np.array([x['rx'], x['ry']]), axis=1)
     play_data.drop(['rx', 'ry'], axis=1, inplace=True)
 
-    group_data['offense_m_group'] = group_data.apply(lambda x: np.array([x['mx_off'], x['my_off']]), axis=1)
-    group_data['defense_m_group'] = group_data.apply(lambda x: np.array([x['mx_def'], x['my_def']]), axis=1)
-    group_data.drop(['mx_off', 'my_off', 'mx_def', 'my_def'], axis=1, inplace=True)
-
     # Return values
+    group_data['offense_m_group'] = pd.Series(o_m_group)
+    group_data['defense_m_group'] = pd.Series(d_m_group)
+
     return play_data, group_data
+
+
+def calc_transition_state(group_data):
+    group_data['o_state'] = group_data.apply(lambda x: 'polar' if (x['offense_p_group'] > 0.65 and x['offense_m_group'] < 0.35) else 'swarm' if (x['offense_p_group'] < 0.35 and x['offense_m_group'] < 0.35) else 'milling' if (x['offense_p_group'] < 0.35 and x['offense_m_group'] > 0.65) else 'transitional', axis=1)
+    group_data['d_state'] = group_data.apply(lambda x: 'polar' if (x['defense_p_group'] > 0.65 and x['defense_m_group'] < 0.35) else 'swarm' if (x['defense_p_group'] < 0.35 and x['defense_m_group'] < 0.35) else 'milling' if (x['defense_p_group'] < 0.35 and x['defense_m_group'] > 0.65) else 'transitional', axis=1)
+
+    return group_data
 
 
 def calc_play_v_group(play_data, group_data, time_step):
