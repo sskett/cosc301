@@ -1,6 +1,14 @@
 import pandas as pd
 import numpy as np
 import math
+import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+from scipy.spatial import ConvexHull, convex_hull_plot_2d
+from matplotlib import cm
+import scipy.ndimage.filters as filters
+
+def calc_play_a_group(data, group_data):
+    pass
 
 
 def analyse_play_data_state_transition(data):
@@ -14,6 +22,9 @@ def analyse_play_data_state_transition(data):
     group_data = calc_play_v_group(data, group_data, 0.1)
     # Calculate h_group data (Shannon Entropy)
     calc_play_h_group(data, group_data)
+    # Calculate A_group data (Convex hulls)
+    calc_play_a_group(data, group_data)
+
     print('Calculating group data complete')
     return data, group_data
 
@@ -136,8 +147,8 @@ def calc_play_v_group(play_data, group_data, time_step):
         vy.append(0)
 
         for frame in range(1, num_frames_t):
-            vx.append(math.fabs((c_group_t[0][frame][0] - c_group_t[0][frame - 1][0])) / time_step)
-            vy.append(math.fabs((c_group_t[0][frame][1] - c_group_t[0][frame - 1][1])) / time_step)
+            vx.append(math.sqrt((c_group_t[0][frame][0] - c_group_t[0][frame - 1][0]) ** 2) / time_step)
+            vy.append(math.sqrt((c_group_t[0][frame][1] - c_group_t[0][frame - 1][1]) ** 2) / time_step)
 
         del play_data_t
         return vx, vy
@@ -196,11 +207,6 @@ def calc_play_h_group(play_data, group_data):
     print(h_home)
 
     # e) Plot position probabilities
-    import matplotlib.pyplot as plt
-    from matplotlib.colors import LinearSegmentedColormap
-    from scipy.spatial import ConvexHull, convex_hull_plot_2d
-    from matplotlib import cm
-    import scipy.ndimage.filters as filters
 
     colors = [(0, 0, 1), (0, 1, 1), (0, 1, 0.75), (0, 1, 0), (0.75, 1, 0), (1, 1, 0), (1, 0.8, 0), (1, 0.7, 0), (1, 0, 0)]
 
@@ -209,39 +215,64 @@ def calc_play_h_group(play_data, group_data):
     plt.colorbar()
     plt.show()
 
-    # 7. Calculate area of convex hulls
-    # hull_frame = game_data.loc[(game_data['event'] == 'ball_snapped')]['frameId'].tolist()[0]
-    hull_frame = 30
-    #los = plays.loc[(plays['playId'] == play)]['absoluteYardlineNumber'].tolist()[0]
 
-    # Home team convex hull
-    a_data = play_data.loc[(play_data['teamType'] == 'offense') & (play_data['frameId'] == hull_frame)]
-    a_points = np.zeros((len(a_data), 2))
-    a_points[:, 0] = np.array(a_data['pos'].tolist())[:, 0]
-    a_points[:, 1] = np.array(a_data['pos'].tolist())[:, 1]
-    a_hull = ConvexHull(a_points)
+def calc_play_a_group(play_data, group_data):
 
+    def plot_convex_hulls(play_data, ref_frame):
+        # Calculate area of convex hulls
+        # hull_frame = play_data.loc[(play_data['event'] == 'ball_snapped')]['frameId'].tolist()[0]
+        # los = plays.loc[(plays['playId'] == play)]['absoluteYardlineNumber'].tolist()[0]
 
-    # Away team convex hull
-    a2_data = play_data.loc[(play_data['teamType'] == 'defense') & (play_data['frameId'] == hull_frame)]
-    a2_points = np.zeros((len(a2_data), 2))
-    a2_points[:, 0] = np.array(a2_data['pos'].tolist())[:, 0]
-    a2_points[:, 1] = np.array(a2_data['pos'].tolist())[:, 1]
+        # Home team convex hull
+        a_data = play_data.loc[(play_data['teamType'] == 'offense') & (play_data['frameId'] == ref_frame)]
+        a_points = np.zeros((len(a_data), 2))
+        a_points[:, 0] = np.array(a_data['pos'].tolist())[:, 0]
+        a_points[:, 1] = np.array(a_data['pos'].tolist())[:, 1]
+        a_hull = ConvexHull(a_points)
 
-    a2_hull = ConvexHull(a2_points)
+        # Away team convex hull
+        a2_data = play_data.loc[(play_data['teamType'] == 'defense') & (play_data['frameId'] == ref_frame)]
+        a2_points = np.zeros((len(a2_data), 2))
+        a2_points[:, 0] = np.array(a2_data['pos'].tolist())[:, 0]
+        a2_points[:, 1] = np.array(a2_data['pos'].tolist())[:, 1]
 
-    # Plot image of convex hulls for home and away
-    a = plt.figure()
-    axes = a.add_axes([0, 0, 1, 1])
+        a2_hull = ConvexHull(a2_points)
 
-    axes.set_xlim([0, 120])
-    axes.set_ylim([0, 60])
+        # Plot image of convex hulls for home and away
+        a = plt.figure()
+        axes = a.add_axes([0, 0, 1, 1])
 
-    axes.plot(a_points[:, 0], a_points[:, 1], 'o')
-    axes.plot(a2_points[:, 0], a2_points[:, 1], 'x')
-    # axes.axvline(x=los)
-    for simplex in a_hull.simplices:
-        axes.plot(a_points[simplex, 0], a_points[simplex, 1], 'r-')
-    for simplex in a2_hull.simplices:
-        axes.plot(a2_points[simplex, 0], a2_points[simplex, 1], 'g-')
-    a.show()
+        axes.set_xlim([0, 120])
+        axes.set_ylim([0, 60])
+
+        axes.plot(a_points[:, 0], a_points[:, 1], 'o')
+        axes.plot(a2_points[:, 0], a2_points[:, 1], 'x')
+        # axes.axvline(x=los)
+        for simplex in a_hull.simplices:
+            axes.plot(a_points[simplex, 0], a_points[simplex, 1], 'r-')
+        for simplex in a2_hull.simplices:
+            axes.plot(a2_points[simplex, 0], a2_points[simplex, 1], 'g-')
+        a.show()
+
+    plot_convex_hulls(play_data, 30)
+
+    def calc_team_a_group(team):
+        team_data = play_data.loc[(play_data['teamType'] == team)]
+        a_group = []
+
+        for frame in range(1, team_data['frameId'].max() + 1):
+            a_data = team_data.loc[(team_data['frameId'] == frame)]
+            a_hull = ConvexHull(np.array(a_data['pos'].tolist()))
+            a_group.append(a_hull.volume)
+        return a_group
+
+    # Determine area occupied by home and away teams
+    o_a_group = calc_team_a_group('offense')
+    d_a_group = calc_team_a_group('defense')
+
+    # 3. Return values
+    group_data['offense_a_group'] = pd.Series(o_a_group)
+    group_data['defense_a_group'] = pd.Series(d_a_group)
+    group_data['a_group_ratio'] = group_data.apply(lambda x: x.offense_a_group / x.defense_a_group, axis=1)
+
+    return group_data
