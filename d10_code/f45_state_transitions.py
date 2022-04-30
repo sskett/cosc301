@@ -21,12 +21,12 @@ def analyse_play_data_state_transition(data):
     # Calculating v_group data (Group Speed)
     group_data = calc_play_v_group(data, group_data, 0.1)
     # Calculate h_group data (Shannon Entropy)
-    calc_play_h_group(data, group_data)
+    group_data_summary = calc_play_h_group(data, group_data)
     # Calculate A_group data (Convex hulls)
-    calc_play_a_group(data, group_data)
+    group_data = calc_play_a_group(data, group_data)
 
     print('Calculating group data complete')
-    return data, group_data
+    return data, group_data, group_data_summary
 
 
 def calc_play_p_group(play_data, group_data=pd.DataFrame()):
@@ -177,43 +177,69 @@ def calc_play_v_group(play_data, group_data, time_step):
 def calc_play_h_group(play_data, group_data):
     # Max speed ~10yd/sec == ~1yd/frame
     # TODO: Modify to use a limited number of frames instead of whole play
-    # a) Initialise grid
-    grid_size = 64
-    step = 0.5
-    grid = np.zeros(grid_size * grid_size).reshape((grid_size, grid_size))
+    def calc_team_h_group(team, start_frame=play_data['frameId'].min(), end_frame=play_data['frameId'].max()):
+        # a) Initialise grid
+        grid_size = 64
+        step = 0.5
+        grid = np.zeros(grid_size * grid_size).reshape((grid_size, grid_size))
 
-    # b) Calculate position vectors
-    team = play_data.loc[(play_data['teamType'] == 'offense')]
-    for idx, row in team.iterrows():
-        i = round((row.dir_vec[0] * row.s) / step) + int(grid_size / 2 - 1)
-        j = round((row.dir_vec[1] * row.s) / step) + int(grid_size / 2 - 1)
-        grid[i][j] = grid[i][j] + 1
+        # b) Calculate position vectors
+        team_df = play_data.loc[(play_data['teamType'] == team) & (play_data['frameId'] >= start_frame) & (play_data['frameId'] <= end_frame)]
+        for idx, row in team_df.iterrows():
+            i = round((row.dir_vec[0] * row.s) / step) + int(grid_size / 2 - 1)
+            j = round((row.dir_vec[1] * row.s) / step) + int(grid_size / 2 - 1)
+            grid[i][j] = grid[i][j] + 1
 
-    # c) Estimate probabilities
-    p_grid = np.zeros(grid_size * grid_size).reshape((grid_size, grid_size))
-    sum_f = grid.sum()
-    for i in range(0, grid_size):
-        for j in range(0, grid_size):
-            p_grid[i][j] = grid[i][j] / sum_f
+        # c) Estimate probabilities
+        p_grid = np.zeros(grid_size * grid_size).reshape((grid_size, grid_size))
+        sum_f = grid.sum()
+        for i in range(0, grid_size):
+            for j in range(0, grid_size):
+                p_grid[i][j] = grid[i][j] / sum_f
 
-    # d) Calculate Shannon-Entropy (h)
-    h_home = []
-    h_grid = np.zeros(grid_size * grid_size).reshape((grid_size, grid_size))
-    for i in range(0, grid_size):
-        for j in range(0, grid_size):
-            if p_grid[i][j] > 0:
-                h_grid[i][j] = p_grid[i][j] * math.log(p_grid[i][j], 2)
-    h_home.append(-1 * h_grid.sum())
-    print(h_home)
+        # d) Calculate Shannon-Entropy (h)
+        h_home = []
+        h_grid = np.zeros(grid_size * grid_size).reshape((grid_size, grid_size))
+        for i in range(0, grid_size):
+            for j in range(0, grid_size):
+                if p_grid[i][j] > 0:
+                    h_grid[i][j] = p_grid[i][j] * math.log(p_grid[i][j], 2)
+        h_home.append(-1 * h_grid.sum())
+        return h_home
+
+    def find_reference_frames(team):
+        data = play_data.loc[(play_data['teamType'] == team)]
+        first_frame = data['frameId'].min()
+        ball_snap = data.loc[(data['event'] == 'ball_snap')]['frameId'].min()
+        pass_forward = data.loc[(data['event'] == 'pass_forward')]['frameId'].min()
+        pass_arrived = data.loc[(data['event'] == 'pass_arrived')]['frameId'].min()
+        last_frame = data['frameId'].max()
+
+        return first_frame, ball_snap, pass_forward, pass_arrived, last_frame
+
+    group_data_summary = pd.DataFrame()
+    first, snap, throw, catch, last = find_reference_frames('offense')
+    group_data_summary['offense_h_group'] = calc_team_h_group('offense')
+    group_data_summary['offense_h_presnap'] = calc_team_h_group('offense', first, snap)
+    group_data_summary['offense_h_to_throw'] = calc_team_h_group('offense', snap, throw)
+    group_data_summary['offense_h_to_end'] = calc_team_h_group('offense', throw, last)
+
+    first, snap, throw, catch, last = find_reference_frames('defense')
+    group_data_summary['defense_h_group'] = calc_team_h_group('defense')
+    group_data_summary['defense_h_presnap'] = calc_team_h_group('defense', first, snap)
+    group_data_summary['defense_h_to_throw'] = calc_team_h_group('defense', snap, throw)
+    group_data_summary['defense_h_to_end'] = calc_team_h_group('defense', throw, last)
 
     # e) Plot position probabilities
 
-    colors = [(0, 0, 1), (0, 1, 1), (0, 1, 0.75), (0, 1, 0), (0.75, 1, 0), (1, 1, 0), (1, 0.8, 0), (1, 0.7, 0), (1, 0, 0)]
+    #colors = [(0, 0, 1), (0, 1, 1), (0, 1, 0.75), (0, 1, 0), (0.75, 1, 0), (1, 1, 0), (1, 0.8, 0), (1, 0.7, 0), (1, 0, 0)]
 
-    cm = LinearSegmentedColormap.from_list('sample', colors)
-    plt.imshow(p_grid, cmap=cm)
-    plt.colorbar()
-    plt.show()
+    #cm = LinearSegmentedColormap.from_list('sample', colors)
+    #plt.imshow(p_grid, cmap=cm)
+    #plt.colorbar()
+    #plt.show()
+
+    return group_data_summary
 
 
 def calc_play_a_group(play_data, group_data):
@@ -254,7 +280,7 @@ def calc_play_a_group(play_data, group_data):
             axes.plot(a2_points[simplex, 0], a2_points[simplex, 1], 'g-')
         a.show()
 
-    plot_convex_hulls(play_data, 30)
+    #plot_convex_hulls(play_data, 30)
 
     def calc_team_a_group(team):
         team_data = play_data.loc[(play_data['teamType'] == team)]

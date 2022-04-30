@@ -30,6 +30,6 @@ def analyse_play(play_id, plays_df, games_df, players_df, source_dir):
     tracking_df = filter_tracking_data(tracking_df, game_id, play_id)
     tracking_df = clean_tracking_data(tracking_df)
     tracking_df = transform_tracking_data(tracking_df, o_team_type)
-    tracking_df, group_df = analyse_play_data_state_transition(tracking_df)
+    tracking_df, group_df, summary_df = analyse_play_data_state_transition(tracking_df)
 
-    return tracking_df, group_df
+    return {game_id: {play_id: [tracking_df, group_df, summary_df]}}

@@ -52,7 +52,7 @@ if __name__ == '__main__':
     play_ids = plays_df['gpid'].unique().tolist()
 
     # Start multiprocessing pool
-    ray.init()
+    ray.init(num_cpus=22)
 
     # Process selected games
     futures = [dfa.analyse_play.remote(play, plays_df, games_df, players_df, source_folder) for play in play_ids]
