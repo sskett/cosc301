@@ -19,13 +19,13 @@ if __name__ == '__main__':
     # Set options
     define_pandas_options()
     options = {
-        'weeks_to_import': 1,
+        'weeks_to_import': [3],
         'players_to_import_by_id': [],
         'players_to_import_by_name': [],
-        'games_to_import': [2018090600],
+        'games_to_import': [2018092301],
         'teams_to_import': [],
         'team_type_to_import': ['home', 'away', 'football'],
-        'plays_to_import': [75],
+        'plays_to_import': [453],
         'directions_to_select': ['left', 'right'],
         'routes_to_select': []
     }

@@ -7,9 +7,6 @@ from scipy.spatial import ConvexHull, convex_hull_plot_2d
 from matplotlib import cm
 import scipy.ndimage.filters as filters
 
-def calc_play_a_group(data, group_data):
-    pass
-
 
 def analyse_play_data_state_transition(data):
     # Calculating p_group data (Polarisation)
@@ -25,7 +22,6 @@ def analyse_play_data_state_transition(data):
     # Calculate A_group data (Convex hulls)
     group_data = calc_play_a_group(data, group_data)
 
-    print('Calculating group data complete')
     return data, group_data, group_data_summary
 
 
@@ -34,7 +30,6 @@ def calc_play_p_group(play_data, group_data=pd.DataFrame()):
     def calc_team_p_group(team):
         team_data = play_data.loc[(play_data['teamType'] == team)]
         p_group = []
-
         # print('Calculating polarisation of the home team')
         for frame in range(1, team_data['frameId'].max() + 1):
             n_players = team_data['nflId'].nunique()
@@ -178,16 +173,30 @@ def calc_play_h_group(play_data, group_data):
     # Max speed ~10yd/sec == ~1yd/frame
     # TODO: Modify to use a limited number of frames instead of whole play
     def calc_team_h_group(team, start_frame=play_data['frameId'].min(), end_frame=play_data['frameId'].max()):
+
+        def plot_heatmap():
+            colors = [(0, 0, 1), (0, 1, 1), (0, 1, 0.75), (0, 1, 0), (0.75, 1, 0), (1, 1, 0), (1, 0.8, 0), (1, 0.7, 0), (1, 0, 0)]
+            cm = LinearSegmentedColormap.from_list('sample', colors)
+            plt.imshow(p_grid, cmap=cm)
+            ax = plt.gca()
+            ax.set_ylim(ax.get_ylim()[::-1])
+            plt.colorbar()
+            plt.show()
+
         # a) Initialise grid
-        grid_size = 64
-        step = 0.5
+        max_distance_per_frame = 1.2
+        step = 0.1
+        freq = 10
+        grid_size = int(max_distance_per_frame / step * 2)
+
         grid = np.zeros(grid_size * grid_size).reshape((grid_size, grid_size))
 
         # b) Calculate position vectors
         team_df = play_data.loc[(play_data['teamType'] == team) & (play_data['frameId'] >= start_frame) & (play_data['frameId'] <= end_frame)]
         for idx, row in team_df.iterrows():
-            i = round((row.dir_vec[0] * row.s) / step) + int(grid_size / 2 - 1)
-            j = round((row.dir_vec[1] * row.s) / step) + int(grid_size / 2 - 1)
+            # TODO: Unhandled error - Analysing play 2018092300-1846
+            i = round((row.dir_vec[0] * (row.s / freq)) / step) + int(grid_size / 2)
+            j = round((row.dir_vec[1] * (row.s / freq)) / step) + int(grid_size / 2)
             grid[i][j] = grid[i][j] + 1
 
         # c) Estimate probabilities
@@ -195,7 +204,7 @@ def calc_play_h_group(play_data, group_data):
         sum_f = grid.sum()
         for i in range(0, grid_size):
             for j in range(0, grid_size):
-                p_grid[i][j] = grid[i][j] / sum_f
+                p_grid[i][j] = grid[i][j] / sum_f if grid[i][j] > 0 else 0
 
         # d) Calculate Shannon-Entropy (h)
         h_home = []
@@ -205,6 +214,10 @@ def calc_play_h_group(play_data, group_data):
                 if p_grid[i][j] > 0:
                     h_grid[i][j] = p_grid[i][j] * math.log(p_grid[i][j], 2)
         h_home.append(-1 * h_grid.sum())
+
+        # e) Plot position probabilities
+        #plot_heatmap()
+
         return h_home
 
     def find_reference_frames(team):
@@ -217,7 +230,9 @@ def calc_play_h_group(play_data, group_data):
 
         return first_frame, ball_snap, pass_forward, pass_arrived, last_frame
 
+    # Initialise new dataframe
     group_data_summary = pd.DataFrame()
+
     first, snap, throw, catch, last = find_reference_frames('offense')
     group_data_summary['offense_h_group'] = calc_team_h_group('offense')
     group_data_summary['offense_h_presnap'] = calc_team_h_group('offense', first, snap)
@@ -230,14 +245,12 @@ def calc_play_h_group(play_data, group_data):
     group_data_summary['defense_h_to_throw'] = calc_team_h_group('defense', snap, throw)
     group_data_summary['defense_h_to_end'] = calc_team_h_group('defense', throw, last)
 
-    # e) Plot position probabilities
-
-    #colors = [(0, 0, 1), (0, 1, 1), (0, 1, 0.75), (0, 1, 0), (0.75, 1, 0), (1, 1, 0), (1, 0.8, 0), (1, 0.7, 0), (1, 0, 0)]
-
-    #cm = LinearSegmentedColormap.from_list('sample', colors)
-    #plt.imshow(p_grid, cmap=cm)
-    #plt.colorbar()
-    #plt.show()
+    group_data_summary['gameId'] = group_data['gameId'].values[0]
+    group_data_summary['playId'] = group_data['playId'].values[0]
+    group_data_summary = group_data_summary.reindex(columns=['gameId', 'playId',
+                                                             'offense_h_group', 'offense_h_presnap', 'offense_h_to_throw', 'offense_h_to_end',
+                                                             'defense_h_group', 'defense_h_presnap', 'defense_h_to_throw', 'defense_h_to_end']
+                                                    )
 
     return group_data_summary
 
