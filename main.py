@@ -1,5 +1,6 @@
 import pandas as pd
 import ray
+import time
 
 from d10_code import f10_import_data as dfi
 from d10_code import f20_filter_data as dff
@@ -18,14 +19,16 @@ if __name__ == '__main__':
 
     # Set options
     define_pandas_options()
+    # TODO: Fix 2018092301-453(3)
+    # TODO: Add step to assess tracking data for missing/incomplete data and list games/plays to exclude
     options = {
-        'weeks_to_import': [3],
+        'weeks_to_import': [11, 12, 13, 14, 16, 17],
         'players_to_import_by_id': [],
         'players_to_import_by_name': [],
-        'games_to_import': [2018092301],
+        'games_to_import': [],
         'teams_to_import': [],
         'team_type_to_import': ['home', 'away', 'football'],
-        'plays_to_import': [453],
+        'plays_to_import': [],
         'directions_to_select': ['left', 'right'],
         'routes_to_select': []
     }
@@ -52,12 +55,14 @@ if __name__ == '__main__':
     play_ids = plays_df['gpid'].unique().tolist()
 
     # Start multiprocessing pool
-    ray.init(num_cpus=22)
+    ray.init()
 
     # Process selected games
+    start_time = time.time()
     futures = [dfa.analyse_play.remote(play, plays_df, games_df, players_df, source_folder) for play in play_ids]
     tracking_df = ray.get(futures)
-    print('Complete')
+    finish_time = time.time()
+    print(f'Completed in {finish_time - start_time} seconds.')
     # Combine analysis data
     # Select training/test sets
     # Do stuff...

@@ -197,8 +197,10 @@ def calc_play_h_group(play_data, group_data):
             # TODO: Unhandled error - Analysing play 2018092300-1846
             i = round((row.dir_vec[0] * (row.s / freq)) / step) + int(grid_size / 2)
             j = round((row.dir_vec[1] * (row.s / freq)) / step) + int(grid_size / 2)
-            grid[i][j] = grid[i][j] + 1
-
+            try:
+                grid[i][j] = grid[i][j] + 1
+            except IndexError:
+                print(f'Index error in {team_df["gameId"].values[0]} - {team_df["playId"].values[0]}')
         # c) Estimate probabilities
         p_grid = np.zeros(grid_size * grid_size).reshape((grid_size, grid_size))
         sum_f = grid.sum()
@@ -232,19 +234,20 @@ def calc_play_h_group(play_data, group_data):
 
     # Initialise new dataframe
     group_data_summary = pd.DataFrame()
+    try:
+        first, snap, throw, catch, last = find_reference_frames('offense')
+        group_data_summary['offense_h_group'] = calc_team_h_group('offense')
+        group_data_summary['offense_h_presnap'] = calc_team_h_group('offense', first, snap)
+        group_data_summary['offense_h_to_throw'] = calc_team_h_group('offense', snap, throw)
+        group_data_summary['offense_h_to_end'] = calc_team_h_group('offense', throw, last)
 
-    first, snap, throw, catch, last = find_reference_frames('offense')
-    group_data_summary['offense_h_group'] = calc_team_h_group('offense')
-    group_data_summary['offense_h_presnap'] = calc_team_h_group('offense', first, snap)
-    group_data_summary['offense_h_to_throw'] = calc_team_h_group('offense', snap, throw)
-    group_data_summary['offense_h_to_end'] = calc_team_h_group('offense', throw, last)
-
-    first, snap, throw, catch, last = find_reference_frames('defense')
-    group_data_summary['defense_h_group'] = calc_team_h_group('defense')
-    group_data_summary['defense_h_presnap'] = calc_team_h_group('defense', first, snap)
-    group_data_summary['defense_h_to_throw'] = calc_team_h_group('defense', snap, throw)
-    group_data_summary['defense_h_to_end'] = calc_team_h_group('defense', throw, last)
-
+        first, snap, throw, catch, last = find_reference_frames('defense')
+        group_data_summary['defense_h_group'] = calc_team_h_group('defense')
+        group_data_summary['defense_h_presnap'] = calc_team_h_group('defense', first, snap)
+        group_data_summary['defense_h_to_throw'] = calc_team_h_group('defense', snap, throw)
+        group_data_summary['defense_h_to_end'] = calc_team_h_group('defense', throw, last)
+    except ValueError:
+        print(f'Error in {group_data["gameId"].values[0]} - {group_data["playId"].values[0]}')
     group_data_summary['gameId'] = group_data['gameId'].values[0]
     group_data_summary['playId'] = group_data['playId'].values[0]
     group_data_summary = group_data_summary.reindex(columns=['gameId', 'playId',
