@@ -5,7 +5,7 @@ from .f20_filter_data import filter_tracking_data
 from .f30_clean_data import clean_tracking_data
 from .f41_transform_data import transform_tracking_data
 from .f45_state_transitions import analyse_play_data_state_transition
-
+from .f50_visualisations import visualise_play
 
 def define_pandas_options():
     pd.set_option('display.max_rows', None)
@@ -37,6 +37,9 @@ def analyse_play(play_id, plays_df, games_df, players_df, source_dir):
     else:
         tracking_df = transform_tracking_data(tracking_df, o_team_type)
         tracking_df, group_df, summary_df = analyse_play_data_state_transition(tracking_df)
+
+        description = plays_df['playDescription'].values[0]
+        visualise_play(game_id, play_id, week, description, o_team_type, tracking_df)
 
         #print(f'Analysing play {game_id}-{play_id} (Week {week}) - COMPLETE')
         return {game_id: {play_id: [tracking_df, group_df, summary_df]}}

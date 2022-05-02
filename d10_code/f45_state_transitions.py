@@ -218,7 +218,7 @@ def calc_play_h_group(play_data, group_data):
         h_home.append(-1 * h_grid.sum())
 
         # e) Plot position probabilities
-        #plot_heatmap()
+        # plot_heatmap()
 
         return h_home
 
@@ -296,7 +296,7 @@ def calc_play_a_group(play_data, group_data):
             axes.plot(a2_points[simplex, 0], a2_points[simplex, 1], 'g-')
         a.show()
 
-    #plot_convex_hulls(play_data, 30)
+    # plot_convex_hulls(play_data, 30)
 
     def calc_team_a_group(team):
         team_data = play_data.loc[(play_data['teamType'] == team)]

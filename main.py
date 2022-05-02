@@ -22,13 +22,13 @@ if __name__ == '__main__':
     # TODO: Fix 2018092301-453(3)
     # TODO: Add step to assess tracking data for missing/incomplete data and list games/plays to exclude
     options = {
-        'weeks_to_import': [11, 12, 13, 14, 16, 17],
+        'weeks_to_import': [1],
         'players_to_import_by_id': [],
         'players_to_import_by_name': [],
-        'games_to_import': [],
+        'games_to_import': [2018090600],
         'teams_to_import': [],
         'team_type_to_import': ['home', 'away', 'football'],
-        'plays_to_import': [],
+        'plays_to_import': [146],
         'directions_to_select': ['left', 'right'],
         'routes_to_select': []
     }
