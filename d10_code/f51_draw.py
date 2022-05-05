@@ -90,7 +90,8 @@ def draw_play_state(play_data, start=1, end=1, los=50):
         # draw positions
         team_data['x'] = team_data.apply(lambda x: x.pos[0], axis=1)
         team_data['y'] = team_data.apply(lambda x: x.pos[1], axis=1)
-        team_data.plot(x='x', y='y', kind='scatter', ax=ax, color=colour, s=1, legend=team, label=team)
+        team_data.plot(x='x', y='y', kind='scatter', ax=ax, color=colour, s=1, marker='.')
+        team_data.loc[team_data['frameId'] == start].plot(x='x', y='y', kind='scatter', ax=ax, color=colour, s=20, legend=team, label=team)
         # draw orientations
         # draw offense direction vectors
         # draw offense convex hull
