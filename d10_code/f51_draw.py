@@ -104,6 +104,8 @@ def draw_play_state(play_data, start=1, end=1, los=50):
     # draw the teams
     draw_team_state('offense', 'blue')
     draw_team_state('defense', 'red')
+    draw_team_state('ball', 'black')
+
 
 
 
