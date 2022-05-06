@@ -59,8 +59,8 @@ def calc_play_m_group(play_data, group_data):
 
     def calc_team_m_group(team):
         play_data_t = play_data.loc[(play_data['teamType'] == team)].copy()
-        play_data_t['rx'] = 0
-        play_data_t['ry'] = 0
+        # play_data_t['rx'] = 0
+        # play_data_t['ry'] = 0
         num_frames = play_data_t['frameId'].max()
         c_group_t = np.zeros((1, num_frames), dtype=tuple)
 
@@ -94,11 +94,15 @@ def calc_play_m_group(play_data, group_data):
         return play_data_t, mt
 
     # Analyse home and away teams
+    play_data['rx'] = 0
+    play_data['ry'] = 0
+
+    play_data_f = play_data.loc[(play_data['teamType'] == 'ball')].copy()
     play_data_o, o_m_group = calc_team_m_group('offense')
     play_data_d, d_m_group = calc_team_m_group('defense')
 
     # Merge dataframes
-    play_data = pd.concat([play_data_o, play_data_d], ignore_index=True, sort=False)
+    play_data = pd.concat([play_data_o, play_data_d, play_data_f], ignore_index=True, sort=False)
 
     # Convert to 2D vectors
     play_data['r_vec'] = play_data.apply(lambda x: np.array([x['rx'], x['ry']]), axis=1)

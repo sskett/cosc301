@@ -15,7 +15,7 @@ from .f51_draw import draw_field
 def animate_player_movement(play_id, game_id, plays_df, tracking_df):
     def update_animation(frame):
         def update_frame(team_data, team_colour):
-            # Offensive players
+            # Get positions for frame
             frame_df = team_data.query('frameId == ' + str(frame))
             frame_x = frame_df.apply(lambda x: x.pos[0], axis=1)
             frame_y = frame_df.apply(lambda x: x.pos[1], axis=1)
@@ -35,20 +35,26 @@ def animate_player_movement(play_id, game_id, plays_df, tracking_df):
 
             # Direction
             for x, y, direction, speed in zip(frame_x, frame_y, frame_df['dir_vec'], frame_df['s']):
-                dx = direction[0] * speed / 10
-                dy = direction[1] * speed / 10
+                dx = direction[0] * speed
+                dy = direction[1] * speed
                 patch.append(plt.arrow(x, y, dx, dy, color='black', width=0.25, shape='full'))
 
         patch = []
         update_frame(play_offense, 'gold')
         update_frame(play_defense, 'orangered')
 
+        # Add ball to animation
+        ball_df = play_football.query('frameId == ' + str(frame))
+        ball_x = ball_df.apply(lambda x: x.pos[0], axis=1)
+        ball_y = ball_df.apply(lambda x: x.pos[1], axis=1)
+        patch.extend(plt.plot(ball_x, ball_y, 'o', c='black', ms=10, mec='white', data=ball_df['team']))
+
         return patch
 
     # Filter team data
     play_offense = tracking_df.loc[(tracking_df['teamType'] == 'offense')].copy()
     play_defense = tracking_df.loc[(tracking_df['teamType'] == 'defense')].copy()
-    play_football = tracking_df.loc[(tracking_df['team'] == 'football')].copy()
+    play_football = tracking_df.loc[(tracking_df['teamType'] == 'ball')].copy()
 
     # Find boundaries of play data
     max_frame = tracking_df['frameId'].unique().max()
