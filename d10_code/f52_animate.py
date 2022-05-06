@@ -13,15 +13,15 @@ from .f51_draw import draw_field
 
 
 def animate_player_movement(play_id, game_id, plays_df, tracking_df):
-    def update_animation(time):
+    def update_animation(frame):
         patch = []
 
         # Offensive players
-        offense_df = play_offense.query('time == ' + str(time))['pos']
+        offense_df = play_offense.query('frameId == ' + str(frame))
         off_x = offense_df.apply(lambda x: x.pos[0], axis=1)
         off_y = offense_df.apply(lambda x: x.pos[1], axis=1)
         off_number = offense_df['jerseyNumber']
-        off_orientation = offense_df['o-vec']
+        off_orientation = offense_df['o_vec']
         off_dir = offense_df['dir_vec']
         off_speed = offense_df['s']
 
@@ -45,11 +45,11 @@ def animate_player_movement(play_id, game_id, plays_df, tracking_df):
             patch.append(plt.arrow(x, y, dx, dy, color='black', width=0.25, shape='full'))
 
         # Defensive players
-        defense_df = play_defense.query('time == ' + str(time))['pos']
+        defense_df = play_defense.query('frameId == ' + str(frame))
         def_x = defense_df.apply(lambda x: x.pos[0], axis=1)
         def_y = defense_df.apply(lambda x: x.pos[1], axis=1)
         def_number = defense_df['jerseyNumber']
-        def_orientation = defense_df['o-vec']
+        def_orientation = defense_df['o_vec']
         def_dir = defense_df['dir_vec']
         def_speed = defense_df['s']
 
@@ -75,26 +75,23 @@ def animate_player_movement(play_id, game_id, plays_df, tracking_df):
         return patch
 
     play_offense = tracking_df.loc[(tracking_df['teamType'] == 'offense')].copy()
-    play_offense['time'] = play_offense['time'].rank(method='dense')
-
     play_defense = tracking_df.loc[(tracking_df['teamType'] == 'defense')].copy()
-    play_defense['time'] = play_offense['time'].rank(method='dense')
 
-    max_time = play_defense['time'].unique().max()
-    min_time = play_defense['time'].unique().min()
+    max_frame = tracking_df['frameId'].unique().max()
+    min_frame = tracking_df['frameId'].unique().min()
 
-    play_dir = play_offense.sample(1)['playDirection'].values[0]
+    play_dir = tracking_df.sample(1)['playDirection'].values[0]
     yards_to_go = plays_df['yardsToGo'].values[0] if play_dir == 'left' else plays_df['yardsToGo'].values[0] * -1
     yardline_number = plays_df['yardlineNumber'].values[0]
     abs_yardline_number = 120 - plays_df['absoluteYardlineNumber'].values[0] if tracking_df['playDirection'].values[0] == 'left' else plays_df['absoluteYardlineNumber'].values[0]
 
-    fig, ax = draw_field(highlight_line=True, highlight_line_number=yardline_number)
+    fig, ax = draw_field(highlight_line=True, highlight_line_number=abs_yardline_number)
     play_desc = plays_df['playDescription'].values[0]
     plt.title(f'Game {game_id} Play {play_id}\n {play_desc}')
 
     ims = [[]]
-    for time in np.arange(min_time, max_time + 1):
-        patch = update_animation(time)
+    for frame in np.arange(min_frame, max_frame + 1):
+        patch = update_animation(frame)
         ims.append(patch)
 
     return animation.ArtistAnimation(fig, ims, repeat=False)
