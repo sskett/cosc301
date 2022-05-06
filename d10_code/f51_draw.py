@@ -120,7 +120,7 @@ def draw_play(filename, game_id, play_id, week, plays_df, tracking_df, start_eve
 
     # label the plot
     plt.suptitle(f'(Week {week}) Game {game_id} - Play {play_id} [From {start_event} to {end_event}]')
-    plt.title(plays_df['playDescription'].values[0])
+    plt.title(play_data['playDescription'].values[0])
     plt.legend(loc=1)
     plt.savefig(filename)
 

@@ -59,13 +59,14 @@ def animate_player_movement(play_id, game_id, plays_df, tracking_df):
 
     # Determine key characteristics
     play_dir = tracking_df.sample(1)['playDirection'].values[0]
-    yards_to_go = plays_df['yardsToGo'].values[0] if play_dir == 'left' else plays_df['yardsToGo'].values[0] * -1
-    yardline_number = plays_df['yardlineNumber'].values[0]
-    abs_yardline_number = 120 - plays_df['absoluteYardlineNumber'].values[0] if tracking_df['playDirection'].values[0] == 'left' else plays_df['absoluteYardlineNumber'].values[0]
+    play_data = plays_df.loc[(plays_df['playId'] == play_id)]
+    yards_to_go = play_data['yardsToGo'].values[0] if play_dir == 'left' else play_data['yardsToGo'].values[0] * -1
+    yardline_number = play_data['yardlineNumber'].values[0]
+    abs_yardline_number = 120 - play_data['absoluteYardlineNumber'].values[0] if tracking_df['playDirection'].values[0] == 'left' else play_data['absoluteYardlineNumber'].values[0]
 
     # Draw field
     fig, ax = draw_field(highlight_line=True, highlight_line_number=abs_yardline_number)
-    play_desc = plays_df['playDescription'].values[0]
+    play_desc = play_data['playDescription'].values[0]
     plt.title(f'Game {game_id} Play {play_id}\n {play_desc}')
 
     # Draw animation frames
