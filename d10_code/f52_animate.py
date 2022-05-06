@@ -1,13 +1,10 @@
 import numpy as np
-import pandas as pd
 
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 from matplotlib import animation
 from matplotlib.animation import FFMpegWriter
 
 import os.path
-import dateutil
 
 from .f51_draw import draw_field
 
