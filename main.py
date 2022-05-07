@@ -16,7 +16,7 @@ def define_pandas_options():
 
 
 if __name__ == '__main__':
-
+    start_time = time.time()
     # Set options
     define_pandas_options()
     # TODO: Fix 2018092301-453(3)
@@ -25,10 +25,10 @@ if __name__ == '__main__':
         'weeks_to_import': [1],
         'players_to_import_by_id': [],
         'players_to_import_by_name': [],
-        'games_to_import': [2018090600],
+        'games_to_import': [2018090912],
         'teams_to_import': [],
         'team_type_to_import': ['home', 'away', 'football'],
-        'plays_to_import': [],
+        'plays_to_import': [2439],
         'directions_to_select': ['left', 'right'],
         'routes_to_select': []
     }
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     ray.init()
 
     # Process selected games
-    start_time = time.time()
+
     futures = [dfa.analyse_play.remote(play, plays_df, games_df, players_df, source_folder) for play in play_ids]
     tracking_df = ray.get(futures)
     finish_time = time.time()

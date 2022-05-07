@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 import matplotlib.pyplot as plt
 from matplotlib import animation
@@ -62,10 +63,13 @@ def animate_player_movement(play_id, game_id, plays_df, tracking_df):
     play_data = plays_df.loc[(plays_df['playId'] == play_id)]
     yards_to_go = play_data['yardsToGo'].values[0] if play_dir == 'left' else play_data['yardsToGo'].values[0] * -1
     yardline_number = play_data['yardlineNumber'].values[0]
-    abs_yardline_number = 120 - play_data['absoluteYardlineNumber'].values[0] if tracking_df['playDirection'].values[0] == 'left' else play_data['absoluteYardlineNumber'].values[0]
+    if pd.isna(play_data['absoluteYardlineNumber'].values[0]):
+        los = 0
+    else:
+        los = 120 - play_data['absoluteYardlineNumber'].values[0] if tracking_df['playDirection'].values[0] == 'left' else play_data['absoluteYardlineNumber'].values[0]
 
     # Draw field
-    fig, ax = draw_field(highlight_line=True, highlight_line_number=abs_yardline_number)
+    fig, ax = draw_field(highlight_line=True, highlight_line_number=los)
     play_desc = play_data['playDescription'].values[0]
     plt.title(f'Game {game_id} Play {play_id}\n {play_desc}')
 

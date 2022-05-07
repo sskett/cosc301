@@ -14,4 +14,4 @@ def visualise_play(game_id, play_id, week, plays_df, tracking_df, start_event=No
 
     root_dir = './d20_intermediate_files/'
     draw(root_dir)
-    animate(root_dir)
+    #animate(root_dir)

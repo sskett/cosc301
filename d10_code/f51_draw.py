@@ -1,3 +1,4 @@
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
@@ -112,7 +113,10 @@ def draw_play(filename, game_id, play_id, week, plays_df, tracking_df, start_eve
         os.makedirs(filename.rsplit('/', 1)[0])
 
     play_data = plays_df.loc[plays_df['playId'] == play_id]
-    los = 120 - play_data['absoluteYardlineNumber'].values[0] if tracking_df['playDirection'].values[0] == 'left' else play_data['absoluteYardlineNumber'].values[0]
+    if pd.isna(play_data['absoluteYardlineNumber'].values[0]):
+        los = 0
+    else:
+        los = 120 - play_data['absoluteYardlineNumber'].values[0] if tracking_df['playDirection'].values[0] == 'left' else play_data['absoluteYardlineNumber'].values[0]
 
     start_frame = tracking_df.loc[(tracking_df['event'] == start_event)]['frameId'].min() if start_event else 1
     end_frame = tracking_df.loc[(tracking_df['event'] == end_event)]['frameId'].max() if end_event else tracking_df['frameId'].max()
@@ -123,6 +127,7 @@ def draw_play(filename, game_id, play_id, week, plays_df, tracking_df, start_eve
     plt.title(play_data['playDescription'].values[0])
     plt.legend(loc=1)
     plt.savefig(filename)
+    plt.close('all')
 
 
 
