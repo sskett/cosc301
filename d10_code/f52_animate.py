@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
+import pandas.errors
 from matplotlib import animation
 from matplotlib.animation import FFMpegWriter
 
@@ -19,8 +20,11 @@ def animate_player_movement(play_id, game_id, plays_df, tracking_df):
             frame_y = frame_df.apply(lambda x: x.pos[1], axis=1)
 
             # Location
-            patch.extend(plt.plot(frame_x, frame_y, 'o', c=team_colour, ms=20, mec='white'))
 
+            try:
+                patch.extend(plt.plot(frame_x, frame_y, 'o', c=team_colour, ms=20, mec='white'))
+            except pandas.errors.InvalidIndexError:
+                print(f'InvalidIndexError in frame: {frame}')
             # Jersey Numbers
             for x, y, num in zip(frame_x, frame_y, frame_df['jerseyNumber']):
                 patch.append(plt.text(x, y, int(num), va='center', ha='center', color='black', size='medium'))
@@ -55,8 +59,8 @@ def animate_player_movement(play_id, game_id, plays_df, tracking_df):
     play_football = tracking_df.loc[(tracking_df['teamType'] == 'ball')].copy()
 
     # Find boundaries of play data
-    max_frame = tracking_df['frameId'].unique().max()
-    min_frame = tracking_df['frameId'].unique().min()
+    max_frame = min(play_offense['frameId'].unique().max(), play_defense['frameId'].unique().max(), play_football['frameId'].unique().max())
+    min_frame = max(play_offense['frameId'].unique().min(), play_defense['frameId'].unique().min(), play_football['frameId'].unique().min())
 
     # Determine key characteristics
     play_dir = tracking_df.sample(1)['playDirection'].values[0]

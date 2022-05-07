@@ -25,10 +25,10 @@ if __name__ == '__main__':
         'weeks_to_import': [1],
         'players_to_import_by_id': [],
         'players_to_import_by_name': [],
-        'games_to_import': [2018090912],
+        'games_to_import': [],
         'teams_to_import': [],
         'team_type_to_import': ['home', 'away', 'football'],
-        'plays_to_import': [2439],
+        'plays_to_import': [],
         'directions_to_select': ['left', 'right'],
         'routes_to_select': []
     }
