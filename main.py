@@ -1,6 +1,7 @@
 import pandas as pd
 import ray
 import time
+import os.path
 
 from d10_code import f10_import_data as dfi
 from d10_code import f20_filter_data as dff
@@ -70,10 +71,19 @@ if __name__ == '__main__':
     for result_idx in results:
         for game_idx in result_idx.keys():
             for play_idx in result_idx[game_idx].keys():
-                tracking_results = pd.concat([tracking_results, result_idx[game_idx][play_idx][0]])
-                frame_results = pd.concat([frame_results, result_idx[game_idx][play_idx][1]])
-                play_results = pd.concat([play_results, result_idx[game_idx][play_idx][2]])
+                tracking_results = pd.concat([tracking_results, result_idx[game_idx][play_idx][0]]).dropna()
+                frame_results = pd.concat([frame_results, result_idx[game_idx][play_idx][1]]).dropna()
+                play_results = pd.concat([play_results, result_idx[game_idx][play_idx][2]]).dropna()
     del results
+
+    result_files = [(tracking_results, 'tracking_results.csv'), (frame_results, 'frame_results.csv'), (play_results, 'play_results.csv')]
+
+    for file in result_files:
+        path = 'd20_intermediate_files/' + file[1]
+        if os.path.exists(path):
+            file[0].to_csv(path, mode='a', index=False, header=False)
+        else:
+            file[0].to_csv(path, mode='w', index=False, header=True)
 
     finish_time = time.time()
     print(f'Completed in {finish_time - start_time} seconds.')
