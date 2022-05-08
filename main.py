@@ -22,6 +22,7 @@ if __name__ == '__main__':
     # TODO: Fix 2018092301-453(3)
     # TODO: Add step to assess tracking data for missing/incomplete data and list games/plays to exclude
     options = {
+        # no errors in 'weeks_to_import': [1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 16, 17],
         'weeks_to_import': [1],
         'players_to_import_by_id': [],
         'players_to_import_by_name': [],
@@ -58,9 +59,22 @@ if __name__ == '__main__':
     ray.init()
 
     # Process selected games
-
     futures = [dfa.analyse_play.remote(play, plays_df, games_df, players_df, source_folder) for play in play_ids]
-    tracking_df = ray.get(futures)
+    results = ray.get(futures)
+
+    # Collate results
+    tracking_results = pd.DataFrame()
+    frame_results = pd.DataFrame()
+    play_results = pd.DataFrame()
+
+    for result_idx in results:
+        for game_idx in result_idx.keys():
+            for play_idx in result_idx[game_idx].keys():
+                tracking_results = pd.concat([tracking_results, result_idx[game_idx][play_idx][0]])
+                frame_results = pd.concat([frame_results, result_idx[game_idx][play_idx][1]])
+                play_results = pd.concat([play_results, result_idx[game_idx][play_idx][2]])
+    del results
+
     finish_time = time.time()
     print(f'Completed in {finish_time - start_time} seconds.')
     # Combine analysis data
