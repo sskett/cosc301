@@ -140,35 +140,24 @@ def calc_play_v_group(play_data, group_data, time_step):
             c_group_t[0][frame - 1] = c_group[0] / num_players, c_group[1] / num_players
 
         # Calculate v_group
-        vx = []
-        vy = []
-        vx.append(0)
-        vy.append(0)
+        v = []
+        v.append(0)
 
         for frame in range(1, num_frames_t):
-            vx.append(math.sqrt((c_group_t[0][frame][0] - c_group_t[0][frame - 1][0]) ** 2) / time_step)
-            vy.append(math.sqrt((c_group_t[0][frame][1] - c_group_t[0][frame - 1][1]) ** 2) / time_step)
+            v.append(math.sqrt((((c_group_t[0][frame][0] - c_group_t[0][frame - 1][0]) ** 2) + (c_group_t[0][frame][1] - c_group_t[0][frame - 1][1]) ** 2) / time_step))
 
         del play_data_t
-        return vx, vy
+        return v
 
     # For HOME team
-    off_vx, off_vy = calc_team_v_group('offense')
+    off_v = calc_team_v_group('offense')
 
     # For AWAY team
-    def_vx, def_vy = calc_team_v_group('defense')
+    def_v = calc_team_v_group('defense')
 
     # Merge dataframes
-    group_data['vx_off'] = pd.Series(off_vx)
-    group_data['vy_off'] = pd.Series(off_vy)
-    group_data['vx_def'] = pd.Series(def_vx)
-    group_data['vy_def'] = pd.Series(def_vy)
-
-    # Convert to 2D vectors
-
-    group_data['offense_v_group'] = group_data.apply(lambda x: np.array([x['vx_off'], x['vy_off']]), axis=1)
-    group_data['defense_v_group'] = group_data.apply(lambda x: np.array([x['vx_def'], x['vy_def']]), axis=1)
-    group_data.drop(['vx_off', 'vy_off', 'vx_def', 'vy_def'], axis=1, inplace=True)
+    group_data['offense_v_group'] = pd.Series(off_v)
+    group_data['defense_v_group'] = pd.Series(def_v)
 
     return group_data
 
