@@ -30,7 +30,7 @@ if __name__ == '__main__':
         'games_to_import': [2018090600],
         'teams_to_import': [],
         'team_type_to_import': ['home', 'away', 'football'],
-        'plays_to_import': [75, 146, 190, 344, 168],
+        'plays_to_import': [75],
         'directions_to_select': ['left', 'right'],
         'routes_to_select': []
     }

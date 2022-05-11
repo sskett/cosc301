@@ -1,8 +1,11 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+import numpy as np
 
 import os.path
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib.colors import LinearSegmentedColormap
+
 
 def draw_field(linenumbers=True, endzones=True, highlight_line=False, highlight_line_number=50, highlight_line_name='Line of Scrimmage', fifty_is_los=False, size=(12, 6.33)):
     # Draw the field
@@ -130,5 +133,42 @@ def draw_play(filename, game_id, play_id, week, plays_df, tracking_df, start_eve
     plt.close('all')
 
 
+def draw_heatmap(df, x_col, x_dim, y_col, y_dim, game_id, play_id):
 
+    def smooth(series, window=5, std=1, centering=True):
+        s_df = series.rolling(window=window, win_type='gaussian', center=centering).mean(std=std)
+        return s_df.dropna()
+
+    def normalise_df(df_n):
+        return df_n / df_n.max() * 0.999
+
+    x = smooth(normalise_df(df.loc[(df['gameId'] == game_id) & (df['playId'] == play_id)][x_col])).tolist()
+    y = smooth(normalise_df(df.loc[(df['gameId'] == game_id) & (df['playId'] == play_id)][y_col])).tolist()
+
+    bins = np.zeros(x_dim * y_dim).reshape((x_dim, y_dim))
+
+    for frame in zip(x, y):
+        x_bin = int(np.floor(frame[0] * x_dim))
+        y_bin = int(np.floor(frame[1] * y_dim))
+        bins[x_bin][y_bin] = bins[x_bin][y_bin] + 1
+
+    binned_p = np.zeros(x_dim * y_dim).reshape((x_dim, y_dim))
+
+    for i in range(0, x_dim):
+        for j in range(0, y_dim):
+            count = 0
+            samples = 0
+            for row in range(-1, 2):
+                for col in range(-1, 2):
+                    if 0 <= i + row <= x_dim - 1 and 0 <= j + col <= y_dim - 1:
+                        samples = samples + 1
+                        count = count + bins[i + row][j + col]
+            binned_p[i][j] = count / samples
+
+    colours = [(0, 0, 1), (0, 1, 1), (0, 1, 0.75), (0, 1, 0), (0.75, 1, 0), (1, 1, 0), (1, 0.8, 0), (1, 0.7, 0), (1, 0, 0)]
+    cm = LinearSegmentedColormap.from_list('sample', colours)
+    plt.imshow(binned_p, cmap=cm)
+    ax = plt.gca()
+    ax.set_ylim(ax.get_ylim()[::-1])
+    plt.show()
 
