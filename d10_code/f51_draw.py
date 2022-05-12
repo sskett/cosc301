@@ -130,6 +130,7 @@ def draw_play(filename, game_id, play_id, week, plays_df, tracking_df, start_eve
     plt.title(play_data['playDescription'].values[0])
     plt.legend(loc=1)
     plt.savefig(filename)
+    plt.show()
     plt.close('all')
 
 
@@ -170,5 +171,8 @@ def draw_heatmap(df, x_col, x_dim, y_col, y_dim, game_id, play_id):
     plt.imshow(binned_p, cmap=cm)
     ax = plt.gca()
     ax.set_ylim(ax.get_ylim()[::-1])
+    plt.title(f'Probability density plot of {x_col} vs {y_col}')
+    plt.xlabel(x_col)
+    plt.ylabel(y_col)
     plt.show()
 

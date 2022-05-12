@@ -17,5 +17,6 @@ def visualise_play(game_id, play_id, week, plays_df, tracking_df, group_df, star
     #draw(root_dir)
     #animate(root_dir)
 
-    draw_heatmap(group_df, 'offense_p_group', 50, 'offense_m_group', 50, game_id, play_id)
-    draw_heatmap(group_df, 'defense_p_group', 50, 'defense_m_group', 50, game_id, play_id)
+    draw_heatmap(group_df, 'offense_m_group', 50, 'offense_p_group', 50, game_id, play_id)
+    draw_heatmap(group_df, 'offense_v_group', 50, 'offense_p_group', 50, game_id, play_id)
+    #draw_heatmap(group_df, 'offense_a_group', 50, 'offense_p_group', 50, game_id, play_id)
