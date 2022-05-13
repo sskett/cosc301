@@ -7,6 +7,7 @@ from matplotlib import animation
 from matplotlib.animation import FFMpegWriter
 
 import os.path
+import platform
 
 from .f51_draw import draw_field
 
@@ -88,7 +89,11 @@ def animate_player_movement(play_id, game_id, plays_df, tracking_df):
 
 def animate_play(filename, play_id, game_id, plays_df, tracking_df, speed=10):
     anim = animate_player_movement(play_id, game_id, plays_df, tracking_df)
-    writer = FFMpegWriter(fps=speed)
+    # Fix for poor hardware encoding on Apple Silicon
+    if platform.processor() == 'arm':
+        writer = FFMpegWriter(fps=speed, codec='h264_videotoolbox')
+    else:
+        writer = FFMpegWriter(fps=speed)
     if not os.path.exists(filename.rsplit('/', 1)[0]):
         os.makedirs(filename.rsplit('/', 1)[0])
     anim.save(filename, writer=writer)
