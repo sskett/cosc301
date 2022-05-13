@@ -21,6 +21,8 @@ def analyse_play_data_state_transition(data):
     group_data_summary = calc_play_h_group(data, group_data)
     # Calculate A_group data (Convex hulls)
     group_data = calc_play_a_group(data, group_data)
+    # Summarise play data
+    group_data_summary = summarise_play_data(data, group_data, group_data_summary)
 
     return data, group_data, group_data_summary
 
@@ -215,39 +217,30 @@ def calc_play_h_group(play_data, group_data):
 
         return h_home
 
-    def find_reference_frames(team):
-        data = play_data.loc[(play_data['teamType'] == team)]
-        first_frame = data['frameId'].min()
-        ball_snap = data.loc[(data['event'] == 'ball_snap')]['frameId'].min()
-        pass_forward = data.loc[(data['event'] == 'pass_forward')]['frameId'].min()
-        pass_arrived = data.loc[(data['event'] == 'pass_arrived')]['frameId'].min()
-        last_frame = data['frameId'].max()
-
-        return first_frame, ball_snap, pass_forward, pass_arrived, last_frame
-
     # Initialise new dataframe
     group_data_summary = pd.DataFrame()
     try:
-        first, snap, throw, catch, last = find_reference_frames('offense')
-        group_data_summary['offense_h_group'] = calc_team_h_group('offense')
+        first, snap, throw, catch, last = find_reference_frames(play_data, 'offense')
+        group_data_summary['offense_h_play'] = calc_team_h_group('offense')
         group_data_summary['offense_h_presnap'] = calc_team_h_group('offense', first, snap)
         group_data_summary['offense_h_to_throw'] = calc_team_h_group('offense', snap, throw)
-        group_data_summary['offense_h_to_end'] = calc_team_h_group('offense', throw, last)
+        group_data_summary['offense_h_to_arrived'] = calc_team_h_group('offense', throw, catch)
+        group_data_summary['offense_h_to_end'] = calc_team_h_group('offense', catch, last)
 
-        first, snap, throw, catch, last = find_reference_frames('defense')
-        group_data_summary['defense_h_group'] = calc_team_h_group('defense')
+        first, snap, throw, catch, last = find_reference_frames(play_data, 'defense')
+        group_data_summary['defense_h_play'] = calc_team_h_group('defense')
         group_data_summary['defense_h_presnap'] = calc_team_h_group('defense', first, snap)
         group_data_summary['defense_h_to_throw'] = calc_team_h_group('defense', snap, throw)
-        group_data_summary['defense_h_to_end'] = calc_team_h_group('defense', throw, last)
+        group_data_summary['defense_h_to_arrived'] = calc_team_h_group('defense', throw, catch)
+        group_data_summary['defense_h_to_end'] = calc_team_h_group('defense', catch, last)
     except ValueError:
         print(f'Error in {group_data["gameId"].values[0]} - {group_data["playId"].values[0]}')
     group_data_summary['gameId'] = group_data['gameId'].values[0]
     group_data_summary['playId'] = group_data['playId'].values[0]
     group_data_summary = group_data_summary.reindex(columns=['gameId', 'playId',
-                                                             'offense_h_group', 'offense_h_presnap', 'offense_h_to_throw', 'offense_h_to_end',
-                                                             'defense_h_group', 'defense_h_presnap', 'defense_h_to_throw', 'defense_h_to_end']
+                                                             'offense_h_play', 'offense_h_presnap', 'offense_h_to_throw', 'offense_h_to_arrived', 'offense_h_to_end',
+                                                             'defense_h_play', 'defense_h_presnap', 'defense_h_to_throw', 'defense_h_to_arrived', 'defense_h_to_end']
                                                     )
-
     return group_data_summary
 
 
@@ -311,3 +304,62 @@ def calc_play_a_group(play_data, group_data):
     group_data['a_group_ratio'] = group_data.apply(lambda x: x.offense_a_group / x.defense_a_group, axis=1)
 
     return group_data
+
+
+def find_reference_frames(df, team):
+    data = df.loc[(df['teamType'] == team)]
+    first_frame = data['frameId'].min()
+    ball_snap = data.loc[(data['event'] == 'ball_snap')]['frameId'].min()
+    pass_forward = data.loc[(data['event'] == 'pass_forward')]['frameId'].min()
+    pass_arrived = data.loc[(data['event'] == 'pass_arrived')]['frameId'].min()
+    last_frame = data['frameId'].max()
+
+    return first_frame, ball_snap, pass_forward, pass_arrived, last_frame
+
+
+def summarise_play_data(tracking, state, summary):
+    possible_events = ['None', 'ball_snap', 'pass_forward', 'pass_arrived', 'pass_outcome_caught', 'out_of_bounds',
+                       'pass_outcome_incomplete', 'first_contact', 'tackle', 'man_in_motion', 'play_action', 'handoff',
+                       'pass_tipped', 'pass_outcome_interception', 'pass_shovel', 'line_set', 'pass_outcome_touchdown',
+                       'fumble', 'fumble_offense_recovered', 'fumble_defense_recovered', 'touchdown', 'shift',
+                       'touchback', 'penalty_flag', 'penalty_accepted', 'field_goal_blocked']
+    possible_routes = ['HITCH', 'OUT', 'FLAT', 'CROSS', 'GO', 'SLANT', 'SCREEN', 'CORNER', 'IN', 'ANGLE', 'POST',
+                       'WHEEL']
+
+    teams = ['offense', 'defense']
+    values = ['p', 'm', 'v', 'a']
+    segments = ['play', 'presnap', 'to_throw', 'to_arrived', 'to_end']
+
+    for team in teams:
+        first_frame, ball_snap, pass_forward, pass_arrived, last_frame = find_reference_frames(tracking, team)
+        bounds = {
+            'play': [first_frame, last_frame],
+            'presnap': [first_frame, ball_snap],
+            'to_throw': [ball_snap, pass_forward],
+            'to_arrived': [pass_forward, pass_arrived],
+            'to_end': [pass_arrived, last_frame]
+        }
+        for value in values:
+            for segment in segments:
+                segment_data = state.loc[(tracking['frameId'] >= first_frame) & (tracking['frameId'] <= last_frame)]
+                col_to_find = team + '_' + value + '_group'
+                col_to_add = team + '_' + value + '_' + segment
+                start_frame = bounds[segment][0]
+                end_frame = bounds[segment][1]
+                segment_data = segment_data.loc[(segment_data['frameId'] >= start_frame) & (segment_data['frameId'] <= end_frame)]
+                summary[col_to_add] = segment_data[col_to_find].mean()
+
+    players = tracking.loc[(tracking['teamType'] == 'offense')]['nflId'].unique().tolist()
+    routes_run = {}
+    for player in players:
+        route = tracking.loc[(tracking['nflId'] == player)]['route'].values[0]
+        if route in possible_routes:
+            if route in routes_run.keys():
+                routes_run[route] = routes_run[route] + 1
+            else:
+                routes_run[route] = 1
+
+    for route in possible_routes:
+        summary[route] = routes_run[route] if route in routes_run.keys() else 0
+
+    return summary
