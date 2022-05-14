@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def import_player_data(filename):
@@ -20,4 +21,13 @@ def import_tracking_data(folder, week, game_id, play_id):
     filename = folder + 'week' + str(week) + '.csv'
     # print(f'Reading in tracking data for {game_id} - {play_id} (Week: {week})')
     return pd.read_csv(filename)
+
+
+def string_to_vector(s):
+    s = s.split('[')[1].split(']')[0]
+    x = float(s.split()[0])
+    y = float(s.split()[1])
+    return np.array([x, y])
+
+
 

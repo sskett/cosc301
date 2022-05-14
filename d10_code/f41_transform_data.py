@@ -82,3 +82,6 @@ def transform_tracking_data(df, o_team):
 
     return df
 
+
+def get_position_delta(row):
+    return row.s / 10 * row.dir_vec
