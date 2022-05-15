@@ -349,7 +349,7 @@ def summarise_play_data(tracking, state, summary):
                 segment_data = segment_data.loc[(segment_data['frameId'] >= start_frame) & (segment_data['frameId'] <= end_frame)]
                 summary[col_to_add] = segment_data[col_to_find].mean()
 
-    players = tracking.loc[(tracking['teamType'] == 'offense')]['nflId'].unique().tolist()
+    players = tracking.loc[(tracking['teamType'] == 'offense')].copy()['nflId'].unique().tolist()
     routes_run = {}
     for player in players:
         route = tracking.loc[(tracking['nflId'] == player)]['route'].values[0]

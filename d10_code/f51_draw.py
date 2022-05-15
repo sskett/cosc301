@@ -113,8 +113,10 @@ def draw_play_state(play_data, start=1, end=1, los=50):
 
 def draw_play(filename, game_id, play_id, week, plays_df, tracking_df, start_event=None, end_event=None):
     if not os.path.exists(filename.rsplit('/', 1)[0]):
-        os.makedirs(filename.rsplit('/', 1)[0])
-
+        try:
+            os.makedirs(filename.rsplit('/', 1)[0])
+        except FileExistsError:
+            print(f'File already exists: {filename} - {play_id}')
     play_data = plays_df.loc[plays_df['playId'] == play_id]
     if pd.isna(play_data['absoluteYardlineNumber'].values[0]):
         los = 0
@@ -130,7 +132,6 @@ def draw_play(filename, game_id, play_id, week, plays_df, tracking_df, start_eve
     plt.title(play_data['playDescription'].values[0])
     plt.legend(loc=1)
     plt.savefig(filename)
-    plt.show()
     plt.close('all')
 
 
@@ -174,5 +175,4 @@ def draw_heatmap(df, x_col, x_dim, y_col, y_dim, game_id, play_id):
     plt.title(f'Probability density plot of {x_col} vs {y_col}')
     plt.xlabel(x_col)
     plt.ylabel(y_col)
-    plt.show()
 

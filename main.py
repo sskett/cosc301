@@ -24,13 +24,13 @@ if __name__ == '__main__':
     # TODO: Add step to assess tracking data for missing/incomplete data and list games/plays to exclude
     options = {
         # no errors in 'weeks_to_import': [1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 16, 17],
-        'weeks_to_import': [1],
+        'weeks_to_import': [4, 5, 6],
         'players_to_import_by_id': [],
         'players_to_import_by_name': [],
-        'games_to_import': [2018090600],
+        'games_to_import': [],
         'teams_to_import': [],
         'team_type_to_import': ['home', 'away', 'football'],
-        'plays_to_import': [75],
+        'plays_to_import': [],
         'directions_to_select': ['left', 'right'],
         'routes_to_select': []
     }
@@ -71,9 +71,9 @@ if __name__ == '__main__':
     for result_idx in results:
         for game_idx in result_idx.keys():
             for play_idx in result_idx[game_idx].keys():
-                tracking_results = pd.concat([tracking_results, result_idx[game_idx][play_idx][0]]).dropna()
-                frame_results = pd.concat([frame_results, result_idx[game_idx][play_idx][1]]).dropna()
-                play_results = pd.concat([play_results, result_idx[game_idx][play_idx][2]]).dropna()
+                tracking_results = pd.concat([tracking_results, result_idx[game_idx][play_idx][0]])
+                frame_results = pd.concat([frame_results, result_idx[game_idx][play_idx][1]])
+                play_results = pd.concat([play_results, result_idx[game_idx][play_idx][2]])
     del results
 
     result_files = [(tracking_results, 'tracking_results.csv'), (frame_results, 'frame_results.csv'), (play_results, 'play_results.csv')]
