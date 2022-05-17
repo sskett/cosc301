@@ -20,7 +20,13 @@ def import_play_data(filename):
 def import_tracking_data(folder, week, game_id, play_id):
     filename = folder + 'week' + str(week) + '.csv'
     # print(f'Reading in tracking data for {game_id} - {play_id} (Week: {week})')
-    return pd.read_csv(filename)
+    df = pd.read_csv(filename)
+    if df.shape[0] > 0:
+        return df
+    else:
+
+        return pd.DataFrame(columns=cols)
+
 
 
 def string_to_vector(s):
