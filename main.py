@@ -20,11 +20,9 @@ if __name__ == '__main__':
     start_time = time.time()
     # Set options
     define_pandas_options()
-    # TODO: Fix 2018092301-453(3)
-    # TODO: Add step to assess tracking data for missing/incomplete data and list games/plays to exclude
     options = {
         # no errors in 'weeks_to_import': [1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 16, 17],
-        'weeks_to_import': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+        'weeks_to_import': [1],
         'players_to_import_by_id': [],
         'players_to_import_by_name': [],
         'games_to_import': [],
@@ -48,13 +46,13 @@ if __name__ == '__main__':
         plays_df = dfi.import_play_data(source_folder + 'plays.csv')
 
         # Filter data to match options
-        players_df = dff.filter_player_data(players_df, options)
+        players_df = dff.filter_player_data(players_df, options).copy()
         player_ids = players_df['nflId'].unique().tolist()
 
-        games_df = dff.filter_game_data(games_df, options)
+        games_df = dff.filter_game_data(games_df, options).copy()
         game_ids = games_df['gameId'].unique().tolist()
 
-        plays_df = dff.filter_play_data(plays_df, options, game_ids)
+        plays_df = dff.filter_play_data(plays_df, options, game_ids).copy()
 
         # Clean data
         players_df = dfc.clean_player_data(players_df)
@@ -91,8 +89,11 @@ if __name__ == '__main__':
             if os.path.exists(path):
                 print(f'File {file[1]} exists')
                 file[0].to_csv(path, mode='a', index=False, header=False)
+            elif file[0].shape[0] > 0:
+                print(f'File {file[1]} does not exist, writing data to new file.')
+                file[0].to_csv(path, mode='w', index=False, header=True)
             else:
-                print(f'File {file[1]} does not exist')
+                print(f'File {file[1]} does not exist, creating header file.')
                 df = pd.DataFrame(columns=file[2])
                 df.to_csv(path, mode='w', index=False, header=True)
 
