@@ -362,4 +362,6 @@ def summarise_play_data(tracking, state, summary):
     for route in possible_routes:
         summary[route] = routes_run[route] if route in routes_run.keys() else 0
 
+    summary['num_routes'] = sum(routes_run.values())
+
     return summary
