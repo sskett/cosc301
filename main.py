@@ -22,10 +22,10 @@ if __name__ == '__main__':
     define_pandas_options()
     options = {
         # no errors in 'weeks_to_import': [1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 16, 17],
-        'weeks_to_import': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+        'weeks_to_import': [1],
         'players_to_import_by_id': [],
         'players_to_import_by_name': [],
-        'games_to_import': [2018091602, 2018091605, 2018092304],
+        'games_to_import': [],
         'teams_to_import': [],
         'team_type_to_import': ['home', 'away', 'football'],
         'plays_to_import': [],
