@@ -6,6 +6,10 @@ from sklearn import datasets, svm, metrics
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+from d10_code import f42_pytorch_analysis as mcm
 
 
 def analyse_routes_data(routes_df):
@@ -19,8 +23,14 @@ def analyse_routes_data(routes_df):
     x_train, x_test, y_train, y_test = train_test_split(routes_df['grids'], routes_df['route'], test_size=0.2, shuffle=False,
                                                         random_state=1)
 
+    print('performing SVM classification of route data')
     do_svm_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
+    print('performing RF classification of route data')
+    do_rf_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
+    print('performing MLP classification of route data')
     do_mlp_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
+    print('performing MCNN classification of route data')
+    mcm.do_mcnn_analysis(routes_df, dims, 0.5, 512, 100, False)
 
 
 def get_position_grid(df, dims):
@@ -80,9 +90,26 @@ def do_svm_analysis(x_train, y_train, x_test, y_test):
     plt.show()
 
 
+def do_rf_analysis(x_train, y_train, x_test, y_test):
+    model = RandomForestClassifier()
+    model.fit(x_train, y_train)
+
+    predicted = model.predict(x_test)
+    print(metrics.accuracy_score(predicted, y_test))
+
+    print(
+        f'Classification report for classifier {model}:\n'
+        f'{metrics.classification_report(y_test, predicted)}\n'
+    )
+
+    disp = metrics.ConfusionMatrixDisplay.from_predictions(y_test, predicted)
+    disp.figure_.suptitle('Confusion Matrix')
+    print(f'Confusion Matrix:\n{disp.confusion_matrix}')
+    plt.show()
+
+
 def do_mlp_analysis(x_train, y_train, x_test, y_test):
     scaler = StandardScaler()
-
     scaler.fit(x_train)
     x_train_scaled = scaler.transform(x_train)
     x_test_scaled = scaler.transform(x_test)
@@ -107,3 +134,4 @@ def plot_route_probs(df):
     plt.figure(figsize=(20, 10))
     plt.bar(df['route'].value_counts().index,
             df['route'].value_counts().values / df['route'].value_counts().sum(), width=0.75)
+
