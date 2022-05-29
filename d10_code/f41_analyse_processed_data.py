@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 
 from sklearn import datasets, svm, metrics
 from sklearn.model_selection import train_test_split
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import StandardScaler
 
 
 def analyse_routes_data(routes_df):
@@ -18,7 +20,7 @@ def analyse_routes_data(routes_df):
                                                         random_state=1)
 
     do_svm_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
-    do_MLP_analysis(routes_df)
+    do_mlp_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
 
 
 def get_position_grid(df, dims):
@@ -78,8 +80,27 @@ def do_svm_analysis(x_train, y_train, x_test, y_test):
     plt.show()
 
 
-def do_MLP_analysis(df):
+def do_mlp_analysis(x_train, y_train, x_test, y_test):
+    scaler = StandardScaler()
 
+    scaler.fit(x_train)
+    x_train_scaled = scaler.transform(x_train)
+    x_test_scaled = scaler.transform(x_test)
+
+    clf = MLPClassifier(solver='lbfgs', random_state=1, max_iter=1000)
+    clf.fit(x_train_scaled, y_train)
+
+    predicted = clf.predict(x_test_scaled)
+
+    print(
+        f'Classification report for classifier {clf}:\n'
+        f'{metrics.classification_report(y_test, predicted)}\n'
+    )
+
+    disp = metrics.ConfusionMatrixDisplay.from_predictions(y_test, predicted)
+    disp.figure_.suptitle('Confusion Matrix')
+    print(f'Confusion Matrix:\n{disp.confusion_matrix}')
+    plt.show()
 
 
 def plot_route_probs(df):
