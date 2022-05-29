@@ -38,8 +38,8 @@ def import_processed_tracking_data(filename):
                         'team', 'gameId', 'playId', 'playDirection', 'route', 'pos', 'teamType', 'o_vec', 'dir_vec',
                         'r_vec']
 
-    chunks = pd.read_csv(filename, usecols=tracking_df_cols, chunksize=100000)
-    return pd.concat(chunks)
+    data = pd.read_csv(filename, usecols=tracking_df_cols, chunksize=100000)
+    return pd.concat(data)
 
 
 
