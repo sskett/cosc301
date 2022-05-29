@@ -1,3 +1,4 @@
+## Week 3
 (analyse_play pid=29323) Error in 2018092301 - 453
 (analyse_play pid=29321) Error in 2018092301 - 520
 (analyse_play pid=29317) Error in 2018092301 - 925
@@ -31,3 +32,17 @@
 (analyse_play pid=29318) Error in 2018092301 - 4074
 (analyse_play pid=29323) Error in 2018092301 - 4191
 (analyse_play pid=29317) Error in 2018092301 - 4098
+
+## Week 7
+(analyse_play pid=30010) Index error in 2018102101 - 2687
+(analyse_play pid=30010) Index error in 2018102101 - 2687
+(analyse_play pid=30010) Index error in 2018102101 - 2687
+(analyse_play pid=30010) Index error in 2018102101 - 2687
+(analyse_play pid=30010) Index error in 2018102101 - 2687
+(analyse_play pid=30010) Index error in 2018102101 - 2687
+(analyse_play pid=30010) Index error in 2018102101 - 2687
+(analyse_play pid=30010) Index error in 2018102101 - 2687
+
+## Week 15
+(analyse_play pid=30946) Error in 2018121605 - 1770
+(analyse_play pid=30942) Error in 2018121605 - 2544
