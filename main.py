@@ -22,7 +22,7 @@ if __name__ == '__main__':
     define_pandas_options()
     options = {
         # no errors in 'weeks_to_import': [1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 16, 17],
-        'weeks_to_import': [1],
+        'weeks_to_import': [6],
         'players_to_import_by_id': [],
         'players_to_import_by_name': [],
         'games_to_import': [],
