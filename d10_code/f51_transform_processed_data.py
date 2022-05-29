@@ -68,3 +68,5 @@ def prepare_routes_data(tracking_data, qb_positions, gpids):
                         index += 1
                     except IndexError:
                         print(f'Data error for gpid {gpid}, player {player} (Start {start_frame} | End {end_frame})')
+
+    return routes_df

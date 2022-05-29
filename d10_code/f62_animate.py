@@ -9,7 +9,7 @@ from matplotlib.animation import FFMpegWriter
 import os.path
 import platform
 
-from .f51_draw import draw_field
+from .f61_draw import draw_field
 
 
 def animate_player_movement(play_id, game_id, plays_df, tracking_df):
