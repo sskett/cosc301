@@ -24,13 +24,13 @@ def analyse_routes_data(routes_df):
                                                         random_state=1)
 
     print('performing SVM classification of route data')
-    do_svm_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
+    #do_svm_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
     print('performing RF classification of route data')
-    do_rf_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
+    #do_rf_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
     print('performing MLP classification of route data')
-    do_mlp_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
+    #do_mlp_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
     print('performing MCNN classification of route data')
-    mcm.do_mcnn_analysis(routes_df, dims, 0.5, 512, 100, False)
+    mcm.do_mcnn_analysis(routes_df, dims, 1, 1024, 1000, False)
 
 
 def get_position_grid(df, dims):
