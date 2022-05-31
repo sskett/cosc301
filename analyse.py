@@ -36,6 +36,9 @@ def prep_data():
     qb_positions = dff.get_field_positions(o_players_df, 'QB', 1)
 
     print('removing non-route runners')
+    invalid_rows = o_players_df[o_players_df['route'] == 'undefined'].index
+    # Delete these row indexes from dataFrame
+    o_players_df.drop(invalid_rows, inplace=True)
     players_with_routes_df = o_players_df.loc[(~o_players_df['route'].isna())]
 
     print('getting gpids')

@@ -50,13 +50,29 @@ def scale_data(train, test):
     return train_scaled, test_scaled
 
 
-def do_mcnn_analysis(df, dims, learning_rate, layers, epochs, scaled=False):
+def get_classification_dicts(df):
+    classes = {}
+    route_idx = {}
+
+    index = 0
+    for route in df['route'].unique().tolist():
+        classes[index] = route
+        index += 1
+
+    for idx, value in classes.items():
+        route_idx[value] = idx
+
+    return classes, route_idx
+
+
+def do_mcnn_analysis(df, dims, learning_rate, units, epochs, scaled=False):
     # Convert class labels to integers and set up training/test data
     classes, route_idx = get_classification_dicts(df)
     df['route_int'] = df['route'].apply(lambda x: route_idx[x])
     x_train, x_test, y_train, y_test = train_test_split(df['grids'], df['route_int'], test_size=0.2, shuffle=False,
                                                         random_state=1)
     if scaled:
+        # TODO: Fails on scaled data - type mismatching?
         x_train, x_test = scale_data(x_train.tolist(), x_test.list())
     else:
         x_train = x_train.tolist()
@@ -65,7 +81,7 @@ def do_mcnn_analysis(df, dims, learning_rate, layers, epochs, scaled=False):
     # Initialise model
     torch.manual_seed(42)
     device = initialise_device()
-    mc_model = MultiClassModel(input_features=dims[0]*dims[1], output_features=len(classes), hidden_units=layers).to(device)
+    mc_model = MultiClassModel(input_features=dims[0]*dims[1], output_features=len(classes), hidden_units=units).to(device)
 
     # Specify loss and optimiser functions
     loss_fn = nn.CrossEntropyLoss()
@@ -133,16 +149,3 @@ def do_mcnn_analysis(df, dims, learning_rate, layers, epochs, scaled=False):
     plt.show()
 
 
-def get_classification_dicts(df):
-    classes = {}
-    route_idx = {}
-
-    index = 0
-    for route in df['route'].unique().tolist():
-        classes[index] = route
-        index += 1
-
-    for idx, value in classes.items():
-        route_idx[value] = idx
-
-    return classes, route_idx

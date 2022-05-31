@@ -16,7 +16,7 @@ from d10_code import f42_pytorch_analysis as mcm
 def analyse_routes_data(routes_df, n_procs):
     x, y = get_limits(routes_df, n_procs)
     #plot_route_data(routes_df, x, y)
-    #plot_route_probs(routes_df)
+    plot_route_probs(routes_df)
 
     dims = (int(abs(x[0]) + abs(x[1])), int(abs(y[0]) + abs(y[1])))
     routes_df['grids'] = get_position_grid(routes_df, dims)
@@ -30,7 +30,10 @@ def analyse_routes_data(routes_df, n_procs):
     print('performing MLP classification of route data')
     #do_mlp_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
     print('performing MCNN classification of route data')
-    #mcm.do_mcnn_analysis(routes_df, dims, 1, 1024, 1000, False)
+    learning_rate = 0.5
+    hidden_units = 256
+    epochs = 2000
+    mcm.do_mcnn_analysis(routes_df, dims, learning_rate, hidden_units, epochs, scaled=False)
 
 
 @ray.remote
