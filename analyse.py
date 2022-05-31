@@ -1,12 +1,15 @@
-import pandas
-import numpy
+import os
 import time
+import ray
+from os import cpu_count
 
 from d10_code import f11_import_processed_data as dfi
 from d10_code import f21_filter_processed_data as dff
 from d10_code import f31_clean_processed_data as dfc
 from d10_code import f41_analyse_processed_data as dfa
 from d10_code import f51_transform_processed_data as dft
+
+N_CORES = os.cpu_count()
 
 
 def prep_data():
@@ -40,14 +43,18 @@ def prep_data():
 
     # Extract data for analysis
     print('extracting route data')
-    return dft.prepare_routes_data(players_with_routes_df, qb_positions, gpids)
+    return dft.prepare_routes_data(players_with_routes_df, qb_positions, gpids, n_procs)
 
 
 if __name__ == '__main__':
     start_time = time.time()
 
+    n_procs = N_CORES
+    ray.shutdown()
+    ray.init(num_cpus=n_procs)
+
     routes_df = prep_data()
-    dfa.analyse_routes_data(routes_df)
+    dfa.analyse_routes_data(routes_df, n_procs)
 
     finish_time = time.time()
     print(f'Completed in {finish_time - start_time} seconds.')

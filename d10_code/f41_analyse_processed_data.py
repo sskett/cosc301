@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import ray
 
 from sklearn import datasets, svm, metrics
 from sklearn.model_selection import train_test_split
@@ -12,16 +13,15 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 from d10_code import f42_pytorch_analysis as mcm
 
 
-def analyse_routes_data(routes_df):
-    x, y = get_limits(routes_df)
-    plot_route_data(routes_df, x, y)
-    plot_route_probs(routes_df)
+def analyse_routes_data(routes_df, n_procs):
+    x, y = get_limits(routes_df, n_procs)
+    #plot_route_data(routes_df, x, y)
+    #plot_route_probs(routes_df)
 
     dims = (int(abs(x[0]) + abs(x[1])), int(abs(y[0]) + abs(y[1])))
     routes_df['grids'] = get_position_grid(routes_df, dims)
 
-    x_train, x_test, y_train, y_test = train_test_split(routes_df['grids'], routes_df['route'], test_size=0.2, shuffle=False,
-                                                        random_state=1)
+    #x_train, x_test, y_train, y_test = train_test_split(routes_df['grids'], routes_df['route'], test_size=0.2, shuffle=False, random_state=1)
 
     print('performing SVM classification of route data')
     #do_svm_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
@@ -30,7 +30,64 @@ def analyse_routes_data(routes_df):
     print('performing MLP classification of route data')
     #do_mlp_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
     print('performing MCNN classification of route data')
-    mcm.do_mcnn_analysis(routes_df, dims, 1, 1024, 1000, False)
+    #mcm.do_mcnn_analysis(routes_df, dims, 1, 1024, 1000, False)
+
+
+@ray.remote
+def find_min_max_from_dataframe(df):
+    x = [0, 0]
+    y = [0, 0]
+
+    for idx, row in df.iterrows():
+        if row['pos'][:, 0].min() < x[0]: x[0] = row['pos'][:, 0].min()
+        if row['pos'][:, 0].max() > x[1]: x[1] = row['pos'][:, 0].max()
+        if row['pos'][:, 1].min() < y[0]: y[0] = row['pos'][:, 1].min()
+        if row['pos'][:, 1].max() > y[1]: y[1] = row['pos'][:, 1].max()
+
+    x = [np.floor(x[0]), np.ceil(x[1])]
+    y[0] = -1 * np.ceil(max(abs(y[0]), abs(y[1])))
+    y[1] = abs(y[0])
+
+    return x, y
+
+
+def find_min_max_from_arrays(x_list, y_list):
+    x = [0, 0]
+    x[0] = x_list[:, 0].min()
+    x[1] = x_list[:, 1].max()
+
+    y = [0, 0]
+    y[1] = np.abs(y_list.max())
+    y[0] = -y[1]
+
+    return x, y
+
+
+def get_limits(df, n_procs):
+    n_rows = len(df)
+    max_rows = int(len(df[:n_rows]))
+    row_sets = []
+    set_pos = 0
+    step = int(max_rows / (n_procs - 1))
+
+    while set_pos < max_rows:
+        start = 0 if set_pos == 0 else set_pos + 1
+        set_pos = set_pos + step
+        end = set_pos if set_pos < max_rows else max_rows
+        row_sets.append((start, end))
+
+    x = []
+    y = []
+
+    futures = [find_min_max_from_dataframe.remote(df[idx[0]:idx[1]]) for idx in row_sets]
+    results = ray.get(futures)
+
+    for i in range(0, len(results)):
+        x.append(results[i][0])
+        y.append(results[i][1])
+
+    x, y = find_min_max_from_arrays(np.array(x), np.array(y))
+    return x, y
 
 
 def get_position_grid(df, dims):
@@ -41,22 +98,6 @@ def get_position_grid(df, dims):
             grid[int(position[0]), int(position[1])] = position[2]
         grids.append(grid.reshape(dims[0] * dims[1]))
     return grids
-
-
-def get_limits(df):
-    x = [0, 0]
-    y = [0, 0]
-
-    for idx, row in df.iterrows():
-        if row['pos'][:, 0].min() < x[0]: x[0] = row['pos'][:, 0].min()
-        if row['pos'][:, 0].max() > x[1]: x[1] = row['pos'][:, 0].max()
-        if row['pos'][:, 1].min() < y[0]: y[0] = row['pos'][:, 1].min()
-        if row['pos'][:, 1].max() > y[1]: y[1] = row['pos'][:, 1].max()
-    x = [np.floor(x[0]), np.ceil(x[1])]
-    y[0] = -1 * np.ceil(max(abs(y[0]), abs(y[1])))
-    y[1] = abs(y[0])
-
-    return x, y
 
 
 def plot_route_data(df, x_lims, y_lims):
