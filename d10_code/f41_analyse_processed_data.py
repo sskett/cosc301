@@ -135,7 +135,7 @@ def do_svm_analysis(x_train, y_train, x_test, y_test):
 
 
 def do_rf_analysis(x_train, y_train, x_test, y_test):
-    model = RandomForestClassifier()
+    model = RandomForestClassifier(n_jobs=-1, n_estimators=1000, max_depth=10)
     model.fit(x_train, y_train)
 
     predicted = model.predict(x_test)
