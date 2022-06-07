@@ -57,13 +57,12 @@ if __name__ == '__main__':
     ray.shutdown()
     ray.init(num_cpus=n_procs)
 
-    routes_df = prep_data()
-
     # Generate the collective order density plots
     st_vis.generate_plots()
 
     # Perform machine learning experiments for route identification
+    routes_df = prep_data()
     dfa.analyse_processed_data(routes_df, n_procs)
 
     finish_time = time.time()
-    print(f'Completed in {finish_time - start_time} seconds.')
+    print(f'Completed analysis in {finish_time - start_time} seconds.')
