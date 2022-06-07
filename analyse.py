@@ -57,11 +57,11 @@ if __name__ == '__main__':
     ray.shutdown()
     ray.init(num_cpus=n_procs)
 
-    routes_df = prep_data()
-
     # Generate the collective order density plots
     st_vis.generate_plots()
 
+    # Prepare the passing route data for analysis
+    routes_df = prep_data()
     # Perform machine learning experiments for route identification
     dfa.analyse_processed_data(routes_df, n_procs)
 
