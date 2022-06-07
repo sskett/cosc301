@@ -8,6 +8,7 @@ from d10_code import f21_filter_processed_data as dff
 from d10_code import f31_clean_processed_data as dfc
 from d10_code import f41_analyse_processed_data as dfa
 from d10_code import f51_transform_processed_data as dft
+from d10_code import f63_state_density_plots as st_vis
 
 N_CORES = os.cpu_count()
 
@@ -57,7 +58,12 @@ if __name__ == '__main__':
     ray.init(num_cpus=n_procs)
 
     routes_df = prep_data()
-    dfa.analyse_routes_data(routes_df, n_procs)
+
+    # Generate the collective order density plots
+    st_vis.generate_plots()
+
+    # Perform machine learning experiments for route identification
+    dfa.analyse_processed_data(routes_df, n_procs)
 
     finish_time = time.time()
     print(f'Completed in {finish_time - start_time} seconds.')

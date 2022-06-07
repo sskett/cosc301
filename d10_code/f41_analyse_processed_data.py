@@ -10,30 +10,45 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
-from d10_code import f42_pytorch_analysis as mcm
+
+from d10_code import f47_route_learning as rl
 
 
-def analyse_routes_data(routes_df, n_procs):
+def analyse_processed_data(routes_df, n_procs):
     x, y = get_limits(routes_df, n_procs)
+    # Plot an overlay of all routes in dataset (only use for constrained data!)
     #plot_route_data(routes_df, x, y)
     plot_route_probs(routes_df)
 
     dims = (int(abs(x[0]) + abs(x[1])), int(abs(y[0]) + abs(y[1])))
     routes_df['grids'] = get_position_grid(routes_df, dims)
+    rl.train_route_finder_models(routes_df, dims)
 
-    #x_train, x_test, y_train, y_test = train_test_split(routes_df['grids'], routes_df['route'], test_size=0.2, shuffle=False, random_state=1)
 
-    print('performing SVM classification of route data')
-    #do_svm_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
-    print('performing RF classification of route data')
-    #do_rf_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
-    print('performing MLP classification of route data')
-    #do_mlp_analysis(x_train.tolist(), y_train, x_test.tolist(), y_test)
-    print('performing MCNN classification of route data')
-    learning_rate = 0.5
-    hidden_units = 256
-    epochs = 2000
-    mcm.do_mcnn_analysis(routes_df, dims, learning_rate, hidden_units, epochs, scaled=False)
+def plot_route_data(df, x_lims, y_lims):
+
+    for idx, row in df.iterrows():
+        plt.scatter(row['pos'][:, 0], row['pos'][:, 1], c=row['pos'][:, 2])
+    plt.xlim(x_lims[0] - 1, x_lims[1] + 1)
+    plt.ylim(y_lims[0] - 1, y_lims[1] + 1)
+    plt.show()
+
+
+def plot_route_probs(df):
+    # Plot a normalised bar chart of route distributions
+    plt.figure(figsize=(20, 10))
+    plt.bar(df['route'].value_counts().index,
+            df['route'].value_counts().values / df['route'].value_counts().sum(), width=0.75)
+
+
+def get_position_grid(df, dims):
+    grids = []
+    for idx, row in df.iterrows():
+        grid = np.zeros(dims[0] * dims[1]).reshape(dims[0], dims[1])
+        for position in row['pos']:
+            grid[int(position[0]), int(position[1])] = position[2]
+        grids.append(grid.reshape(dims[0] * dims[1]))
+    return grids
 
 
 @ray.remote
@@ -91,91 +106,4 @@ def get_limits(df, n_procs):
 
     x, y = find_min_max_from_arrays(np.array(x), np.array(y))
     return x, y
-
-
-def get_position_grid(df, dims):
-    grids = []
-    for idx, row in df.iterrows():
-        grid = np.zeros(dims[0] * dims[1]).reshape(dims[0], dims[1])
-        for position in row['pos']:
-            grid[int(position[0]), int(position[1])] = position[2]
-        grids.append(grid.reshape(dims[0] * dims[1]))
-    return grids
-
-
-def plot_route_data(df, x_lims, y_lims):
-
-    for idx, row in df.iterrows():
-        plt.scatter(row['pos'][:, 0], row['pos'][:, 1], c=row['pos'][:, 2])
-    plt.xlim(x_lims[0] - 1, x_lims[1] + 1)
-    plt.ylim(y_lims[0] - 1, y_lims[1] + 1)
-    plt.show()
-
-
-def do_svm_analysis(x_train, y_train, x_test, y_test):
-
-    # Create a classifier: a support vector classifier
-    clf = svm.SVC(gamma=0.005, kernel='rbf')
-
-    # Learn on the train subset
-    clf.fit(x_train, y_train)
-
-    # Predict the value of the test subset
-    predicted = clf.predict(x_test)
-
-    print(
-        f'Classification report for classifier {clf}:\n'
-        f'{metrics.classification_report(y_test, predicted)}\n'
-    )
-
-    disp = metrics.ConfusionMatrixDisplay.from_predictions(y_test, predicted)
-    disp.figure_.suptitle('Confusion Matrix')
-    print(f'Confusion Matrix:\n{disp.confusion_matrix}')
-    plt.show()
-
-
-def do_rf_analysis(x_train, y_train, x_test, y_test):
-    model = RandomForestClassifier(n_jobs=-1, n_estimators=1000, max_depth=10)
-    model.fit(x_train, y_train)
-
-    predicted = model.predict(x_test)
-    print(metrics.accuracy_score(predicted, y_test))
-
-    print(
-        f'Classification report for classifier {model}:\n'
-        f'{metrics.classification_report(y_test, predicted)}\n'
-    )
-
-    disp = metrics.ConfusionMatrixDisplay.from_predictions(y_test, predicted)
-    disp.figure_.suptitle('Confusion Matrix')
-    print(f'Confusion Matrix:\n{disp.confusion_matrix}')
-    plt.show()
-
-
-def do_mlp_analysis(x_train, y_train, x_test, y_test):
-    scaler = StandardScaler()
-    scaler.fit(x_train)
-    x_train_scaled = scaler.transform(x_train)
-    x_test_scaled = scaler.transform(x_test)
-
-    clf = MLPClassifier(solver='lbfgs', random_state=1, max_iter=1000)
-    clf.fit(x_train_scaled, y_train)
-
-    predicted = clf.predict(x_test_scaled)
-
-    print(
-        f'Classification report for classifier {clf}:\n'
-        f'{metrics.classification_report(y_test, predicted)}\n'
-    )
-
-    disp = metrics.ConfusionMatrixDisplay.from_predictions(y_test, predicted)
-    disp.figure_.suptitle('Confusion Matrix')
-    print(f'Confusion Matrix:\n{disp.confusion_matrix}')
-    plt.show()
-
-
-def plot_route_probs(df):
-    plt.figure(figsize=(20, 10))
-    plt.bar(df['route'].value_counts().index,
-            df['route'].value_counts().values / df['route'].value_counts().sum(), width=0.75)
 
