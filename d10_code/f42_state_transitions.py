@@ -3,9 +3,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from scipy.spatial import ConvexHull, convex_hull_plot_2d
-from matplotlib import cm
-import scipy.ndimage.filters as filters
+from scipy.spatial import ConvexHull
 
 
 def analyse_play_data_state_transition(data):
@@ -237,10 +235,10 @@ def calc_play_h_group(play_data, group_data):
         print(f'Error in {group_data["gameId"].values[0]} - {group_data["playId"].values[0]}')
     group_data_summary['gameId'] = group_data['gameId'].values[0]
     group_data_summary['playId'] = group_data['playId'].values[0]
-    group_data_summary = group_data_summary.reindex(columns=['gameId', 'playId',
-                                                             'offense_h_play', 'offense_h_presnap', 'offense_h_to_throw', 'offense_h_to_arrived', 'offense_h_to_end',
-                                                             'defense_h_play', 'defense_h_presnap', 'defense_h_to_throw', 'defense_h_to_arrived', 'defense_h_to_end']
-                                                    )
+    group_data_summary = group_data_summary.reindex(
+        columns=['gameId', 'playId', 'offense_h_play', 'offense_h_presnap', 'offense_h_to_throw',
+                 'offense_h_to_arrived', 'offense_h_to_end', 'defense_h_play', 'defense_h_presnap',
+                 'defense_h_to_throw', 'defense_h_to_arrived', 'defense_h_to_end'])
     return group_data_summary
 
 
@@ -318,6 +316,7 @@ def find_reference_frames(df, team):
 
 
 def summarise_play_data(tracking, state, summary):
+    # Create a supplemental dataframe calculating the parameters for each portion of the play
     possible_events = ['None', 'ball_snap', 'pass_forward', 'pass_arrived', 'pass_outcome_caught', 'out_of_bounds',
                        'pass_outcome_incomplete', 'first_contact', 'tackle', 'man_in_motion', 'play_action', 'handoff',
                        'pass_tipped', 'pass_outcome_interception', 'pass_shovel', 'line_set', 'pass_outcome_touchdown',
@@ -330,6 +329,7 @@ def summarise_play_data(tracking, state, summary):
     values = ['p', 'm', 'v', 'a']
     segments = ['play', 'presnap', 'to_throw', 'to_arrived', 'to_end']
 
+    # Find the reference frames for each play segment for offense and defense (should match but this allows for data errors)
     for team in teams:
         first_frame, ball_snap, pass_forward, pass_arrived, last_frame = find_reference_frames(tracking, team)
         bounds = {
@@ -339,6 +339,7 @@ def summarise_play_data(tracking, state, summary):
             'to_arrived': [pass_forward, pass_arrived],
             'to_end': [pass_arrived, last_frame]
         }
+        # Find the average of each order parameter for the given period of the play
         for value in values:
             for segment in segments:
                 segment_data = state.loc[(tracking['frameId'] >= first_frame) & (tracking['frameId'] <= last_frame)]
@@ -349,6 +350,7 @@ def summarise_play_data(tracking, state, summary):
                 segment_data = segment_data.loc[(segment_data['frameId'] >= start_frame) & (segment_data['frameId'] <= end_frame)]
                 summary[col_to_add] = segment_data[col_to_find].mean()
 
+    # Calculate the number of each route that are run in the play and tabulate them in the dataframe
     players = tracking.loc[(tracking['teamType'] == 'offense')].copy()['nflId'].unique().tolist()
     routes_run = {}
     for player in players:
@@ -362,6 +364,7 @@ def summarise_play_data(tracking, state, summary):
     for route in possible_routes:
         summary[route] = routes_run[route] if route in routes_run.keys() else 0
 
+    # Record the total number of routes run in the play
     summary['num_routes'] = sum(routes_run.values())
 
     return summary

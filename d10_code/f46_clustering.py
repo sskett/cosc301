@@ -1,28 +1,14 @@
-import pandas as pd
-import pandas_profiling as pp
-import numpy as np
-import sklearn
-import matplotlib.pyplot as plt
+from itertools import combinations
 
-from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import normalize
-from scipy.cluster.hierarchy import dendrogram
-import scipy.cluster.hierarchy as shc
-from itertools import combinations
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.inspection import permutation_importance
-from sklearn.model_selection import train_test_split
-from sklearn import metrics
-
 
 from d10_code import f11_import_processed_data as dfi
-from d10_code import f21_filter_processed_data as dff
-from d10_code import f31_clean_processed_data as dfc
-from d10_code import f41_analyse_processed_data as dfa
-from d10_code import f51_transform_processed_data as dft
-from d10_code import f63_state_density_plots as st_vis
 
 
 def string_to_vector(s):

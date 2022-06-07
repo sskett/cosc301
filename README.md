@@ -1,6 +1,6 @@
 
 # UNE COSC301 - Special Topics in Computing
-## NFL GPS Game Data Analysis
+## NFL GPS Game Data Analysis - Spencer Skett
 
 ### Project structure
 
@@ -36,11 +36,15 @@
     testing.ipynb
 
 ### Instructions
-1. Download the project from Github (_url_) into a suitable root folder
-2. Create a virtual environment (tested with Python 3.9.12)
-3. Install project dependencies:
-   1. pip install numpy pandas matplotlib ...
-4. Set options in main.py for data processing
+1. Download the project from Github (_url_) into a suitable root folder and create the folder structure as above
+2. Download the Kaggle dataset into the `d00_source_data` folder (https://www.kaggle.com/competitions/nfl-big-data-bowl-2022/data - NOTE: requires account and competition access)
+3. Create a virtual environment (tested with Python 3.9.12)
+4. Install project dependencies:
+   1. pip install numpy pandas matplotlib scipy ray torch sklearn
+5. Set options in main.py for data processing
+#### WARNING! Steps 5 and 6 have a long runtime and are resource intensive
 5. Run main.py
 6. Run analyse.py
+#### OPTIONAL
+7. The three notebooks, `clustering.ipynb`, `density_plots.ipynb` and `route_finder.ipynb` can be used in lieu of `analyse.py` for a more interactive exploration of the data or to focus on a particular aspect. Some additional non-essential functions exist in the notebooks as well 
 

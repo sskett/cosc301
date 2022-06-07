@@ -1,12 +1,9 @@
-import torch
-import pandas as pd
-from torch import nn
-
 import matplotlib.pyplot as plt
-
-from sklearn import datasets, svm, metrics
+import torch
+from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from torch import nn
 
 
 class MultiClassModel(nn.Module):

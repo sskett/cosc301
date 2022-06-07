@@ -1,18 +1,9 @@
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import ray
 
-from sklearn import datasets, svm, metrics
-from sklearn.model_selection import train_test_split
-from sklearn.neural_network import MLPClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
-
-
-from d10_code import f47_route_learning as f47
 from d10_code import f46_clustering as f46
+from d10_code import f47_route_learning as f47
 from d10_code import f64_cluster_order_density_plots as f64
 
 
@@ -35,7 +26,6 @@ def analyse_processed_data(routes_df, n_procs):
 
 
 def plot_route_data(df, x_lims, y_lims):
-
     for idx, row in df.iterrows():
         plt.scatter(row['pos'][:, 0], row['pos'][:, 1], c=row['pos'][:, 2])
     plt.xlim(x_lims[0] - 1, x_lims[1] + 1)
@@ -91,6 +81,7 @@ def find_min_max_from_arrays(x_list, y_list):
 
 
 def get_limits(df, n_procs):
+    # Finds the min/max x,y coordinates over the set of player positions
     n_rows = len(df)
     max_rows = int(len(df[:n_rows]))
     row_sets = []

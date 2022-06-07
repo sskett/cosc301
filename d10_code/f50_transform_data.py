@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import pandas as pd
 
 
 def calc_dir_vector(angle):

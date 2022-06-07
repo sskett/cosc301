@@ -1,14 +1,9 @@
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
-import ray
-
-from sklearn import datasets, svm, metrics
+from sklearn import svm, metrics
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 from d10_code import f48_pytorch_analysis as mcm
 
