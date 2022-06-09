@@ -119,7 +119,7 @@ def find_optimal_agg_threshold(df_scaled):
         clusters_found.append(np.unique(model.labels_).size)
         silhouette_avg.append(silhouette_score(df_scaled, cluster_labels))
 
-    fig, axs = plt.subplots(2, 1, sharex='true', figsize=(15, 10))
+    fig, axs = plt.subplots(2, 1, sharex=True, figsize=(15, 10))
 
     axs[0].plot(np.array(range_limit) * 10 ** 6, silhouette_avg, marker='o')
     # axs[0].set_xlabel('Distance Threshold (x10e-6)')
@@ -178,19 +178,7 @@ def plot_feature_pairs(df, cols, cluster_col):
 
 
 # Import data
-def perform_clustering():
-    data_directory = './d20_intermediate_files'
-    print('import plays data')
-    play_df = dfi.import_processed_play_data(data_directory + '/play_results.csv')
-    print('import frames data')
-    frame_df = dfi.import_processed_frame_data(data_directory + '/frame_results.csv')
-    print('import tracking data')
-    tracking_df = dfi.import_processed_tracking_data(data_directory + '/tracking_results.csv')
-
-    tracking_df['pos'] = tracking_df['pos'].apply(string_to_vector)
-    tracking_df['o_vec'] = tracking_df['o_vec'].apply(string_to_vector)
-    tracking_df['dir_vec'] = tracking_df['dir_vec'].apply(string_to_vector)
-    tracking_df['r_vec'] = tracking_df['r_vec'].apply(string_to_vector)
+def perform_clustering(play_df):
 
     # Prepare data
     play_df_scaled = prepare_play_data(play_df)
@@ -200,6 +188,8 @@ def perform_clustering():
     # TODO: Remove hardcoding of k_opt, either automate extraction from find_optimal_k or add as CLI parameter?
     find_optimal_k(play_df_scaled, max_clusters)
     k_opt = 6
+    print(play_df.shape)
+    print(play_df_scaled.shape)
     play_df['clusters_k'] = find_k_means(play_df_scaled, k=k_opt)
 
     # Agglomerative Clustering
@@ -210,7 +200,7 @@ def perform_clustering():
 
     # Plot important cluster relationships
     # TODO: Implement Random Forest training to quantitate the most important features, as per clustering.ipynb
-    features = play_df.drop(['gameId', 'playId', 'clusters_agg', 'clusters_kmeans'], axis=1).columns.tolist()
+    features = play_df.drop(['gameId', 'playId', 'clusters_agg', 'clusters_k'], axis=1).columns.tolist()
     plot_feature_pairs(play_df, features, 'clusters_k')
 
     return play_df

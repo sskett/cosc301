@@ -24,7 +24,7 @@ def analyse_play(play_id, plays_df, games_df, players_df, source_dir):
     play_id = int(play_id.split('-')[1])
     week = games_df.loc[games_df['gameId'] == game_id]['week'].tolist()[0]
 
-    print(f'Analysing play {game_id}-{play_id} (Week {week})')
+    #print(f'Analysing play {game_id}-{play_id} (Week {week})')
     # Determine which team is playing offense
     o_team = plays_df.loc[(plays_df['playId'] == play_id)]['possessionTeam'].values[0]
     o_team_type = 'home' if games_df['homeTeamAbbr'].values[0] == o_team else 'away'

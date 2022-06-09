@@ -7,7 +7,7 @@ from d10_code import f47_route_learning as f47
 from d10_code import f64_cluster_order_density_plots as f64
 
 
-def analyse_processed_data(routes_df, n_procs):
+def analyse_processed_data(play_df, frame_df, routes_df, n_procs):
     x, y = get_limits(routes_df, n_procs)
     # Plot an overlay of all routes in dataset (only use for constrained data!)
     # plot_route_data(routes_df, x, y)
@@ -16,7 +16,7 @@ def analyse_processed_data(routes_df, n_procs):
     plot_route_probs(routes_df)
 
     # Clustering
-    play_df = f46.perform_clustering()
+    play_df = f46.perform_clustering(play_df)
     f64.visualise_cluster_order_parameters(play_df, 'clusters_k')
 
     # Route identification modelling

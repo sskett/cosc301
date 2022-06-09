@@ -17,9 +17,9 @@ def prep_data():
     # Import data
     data_directory = './d20_intermediate_files'
     print('import plays data')
-    play_df = dfi.import_processed_play_data(data_directory + '/play_results.csv')
+    play_data = dfi.import_processed_play_data(data_directory + '/play_results.csv')
     print('import frames data')
-    frame_df = dfi.import_processed_frame_data(data_directory + '/frame_results.csv')
+    frame_data = dfi.import_processed_frame_data(data_directory + '/frame_results.csv')
     print('import tracking data')
     tracking_df = dfi.import_processed_tracking_data(data_directory + '/tracking_results.csv')
 
@@ -47,7 +47,8 @@ def prep_data():
 
     # Extract data for analysis
     print('extracting route data')
-    return dft.prepare_routes_data(players_with_routes_df, qb_positions, gpids, n_procs)
+    routes_data = dft.prepare_routes_data(players_with_routes_df, qb_positions, gpids, n_procs)
+    return play_data, frame_data, routes_data
 
 
 if __name__ == '__main__':
@@ -61,8 +62,8 @@ if __name__ == '__main__':
     st_vis.generate_plots()
 
     # Perform machine learning experiments for route identification
-    routes_df = prep_data()
-    dfa.analyse_processed_data(routes_df, n_procs)
+    play_df, frame_df, routes_df = prep_data()
+    dfa.analyse_processed_data(play_df, frame_df, routes_df, n_procs)
 
     finish_time = time.time()
     print(f'Completed analysis in {finish_time - start_time} seconds.')

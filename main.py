@@ -21,8 +21,8 @@ if __name__ == '__main__':
     # Set options
     define_pandas_options()
     options = {
-        # no errors in 'weeks_to_import': [1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 16, 17],
-        'weeks_to_import': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+        # 'weeks_to_import': [1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 16, 17],
+        'weeks_to_import': [3, 7, 15],
         'players_to_import_by_id': [],
         'players_to_import_by_name': [],
         'games_to_import': [],
