@@ -1,6 +1,3 @@
-import pandas as pd
-
-
 def filter_player_data(df, options):
     # print('Filtering player data')
     num_rows_initial = df.size

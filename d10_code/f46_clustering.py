@@ -8,8 +8,6 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import normalize
 
-from d10_code import f11_import_processed_data as dfi
-
 
 def string_to_vector(s):
     try:
